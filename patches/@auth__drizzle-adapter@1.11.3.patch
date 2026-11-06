@@ -1,0 +1,92 @@
+diff --git a/lib/pg.d.ts b/lib/pg.d.ts
+index 02c47ed10ac652994b1b1323e4c8fd716d93240e..9d91c897f5318a18d2e215cbec96f20448f31318 100644
+--- a/lib/pg.d.ts
++++ b/lib/pg.d.ts
+@@ -1,28 +1,17 @@
+-import { GeneratedColumnConfig } from "drizzle-orm";
+-import { PgColumn, PgDatabase, PgQueryResultHKT, PgTableWithColumns } from "drizzle-orm/pg-core";
++import type { AnyRelations, ColumnType } from "drizzle-orm";
++import type { PgAsyncDatabase, PgColumn, PgColumnBaseConfig, PgQueryResultHKT, PgTableWithColumns } from "drizzle-orm/pg-core";
+ import type { Adapter } from "@auth/core/adapters";
+ export declare function defineTables(schema?: Partial<DefaultPostgresSchema>): Required<DefaultPostgresSchema>;
+-export declare function PostgresDrizzleAdapter(client: PgDatabase<PgQueryResultHKT, any>, schema?: DefaultPostgresSchema): Adapter;
++export declare function PostgresDrizzleAdapter<TResult extends PgQueryResultHKT, TRelations extends AnyRelations>(client: PgAsyncDatabase<TResult, TRelations>, schema?: DefaultPostgresSchema): Adapter;
+ type DefaultPostgresColumn<T extends {
+     data: string | number | boolean | Date;
+     dataType: "string" | "number" | "boolean" | "date";
+     notNull: boolean;
+     isPrimaryKey?: boolean;
+     columnType: "PgVarchar" | "PgText" | "PgBoolean" | "PgTimestamp" | "PgInteger" | "PgUUID";
+-}> = PgColumn<{
+-    name: string;
+-    isAutoincrement: boolean;
+-    isPrimaryKey: T["isPrimaryKey"] extends true ? true : false;
+-    hasRuntimeDefault: boolean;
+-    generated: GeneratedColumnConfig<T["data"]> | undefined;
+-    columnType: T["columnType"];
++}> = PgColumn<ColumnType, PgColumnBaseConfig & {
+     data: T["data"];
+-    driverParam: string | number | boolean;
+     notNull: T["notNull"];
+-    hasDefault: boolean;
+-    enumValues: any;
+-    dataType: T["dataType"];
+-    tableName: string;
+ }>;
+ export type DefaultPostgresUsersTable = PgTableWithColumns<{
+     name: string;
+@@ -60,6 +49,7 @@ export type DefaultPostgresUsersTable = PgTableWithColumns<{
+         }>;
+     };
+     dialect: "pg";
++    isAlias: false;
+     schema: string | undefined;
+ }>;
+ export type DefaultPostgresAccountsTable = PgTableWithColumns<{
+@@ -133,6 +123,7 @@ export type DefaultPostgresAccountsTable = PgTableWithColumns<{
+         }>;
+     };
+     dialect: "pg";
++    isAlias: false;
+     schema: string | undefined;
+ }>;
+ export type DefaultPostgresSessionsTable = PgTableWithColumns<{
+@@ -159,6 +150,7 @@ export type DefaultPostgresSessionsTable = PgTableWithColumns<{
+         }>;
+     };
+     dialect: "pg";
++    isAlias: false;
+     schema: string | undefined;
+ }>;
+ export type DefaultPostgresVerificationTokenTable = PgTableWithColumns<{
+@@ -184,6 +176,7 @@ export type DefaultPostgresVerificationTokenTable = PgTableWithColumns<{
+         }>;
+     };
+     dialect: "pg";
++    isAlias: false;
+     schema: string | undefined;
+ }>;
+ export type DefaultPostgresAuthenticatorTable = PgTableWithColumns<{
+@@ -239,6 +232,7 @@ export type DefaultPostgresAuthenticatorTable = PgTableWithColumns<{
+         }>;
+     };
+     dialect: "pg";
++    isAlias: false;
+     schema: string | undefined;
+ }>;
+ export type DefaultPostgresSchema = {
+diff --git a/package.json b/package.json
+index 685c4e130de4c4febd63d14ab47bf31b853cb541..1c546dc823ce50b8e3a7efb8b85cfa74127f954f 100644
+--- a/package.json
++++ b/package.json
+@@ -21,6 +21,10 @@
+       "types": "./index.d.ts",
+       "import": "./index.js",
+       "require": "./index.js"
++    },
++    "./pg": {
++      "types": "./lib/pg.d.ts",
++      "default": "./lib/pg.js"
+     }
+   },
+   "license": "ISC",

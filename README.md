@@ -23,6 +23,10 @@ starter is at `http://localhost:3000` and tRPC is at
 `http://localhost:3000/api/trpc`. The app connects to Docker Postgres at
 `127.0.0.1:5433`. The Compose volume retains the database when you stop the container.
 
+For an existing database initialized with Drizzle 0.x, run `pnpm db:migrate`
+after installing the Drizzle v1 dependencies. Drizzle Kit updates its migration
+history in place and preserves the existing data.
+
 `pnpm db:seed` builds the curated JKU catalog with fixed seed `2026`. Drizzle
 Seed refinements generate each offer's stock and delivery window. The JSON
 export uses the same catalog, prices, and shipping rules with the generator's
@@ -37,6 +41,10 @@ webshop procedures are public and work with the Auth.js values in `.env.example`
 left blank. When enabling Discord sign-in, set `AUTH_SECRET`, `AUTH_DISCORD_ID`,
 and `AUTH_DISCORD_SECRET` and configure the callback
 `http://localhost:3000/api/auth/callback/discord` with Discord.
+
+The pinned Auth.js Drizzle adapter has a pnpm patch that exposes its PostgreSQL
+implementation with Drizzle v1 types. Remove the patch when upgrading to an
+adapter release that supports Drizzle v1.
 
 ## Webshop procedures
 

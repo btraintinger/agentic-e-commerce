@@ -1,15 +1,9 @@
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
-import {
-  accounts,
-  sessions,
-  users,
-  verificationTokens,
-} from "~/server/db/schema";
+import { createAuthAdapter } from "./adapter";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -25,12 +19,7 @@ export const authEnabled = Boolean(
 
 export const authConfig = {
   providers: authEnabled ? [DiscordProvider] : [],
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
+  adapter: createAuthAdapter(db),
   callbacks: {
     session: ({ session, user }) => ({
       ...session,

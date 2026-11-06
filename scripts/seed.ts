@@ -10,7 +10,7 @@ async function main() {
   nextEnv.loadEnvConfig(process.cwd());
   if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL before seeding");
   const connection = postgres(process.env.DATABASE_URL);
-  const db = drizzle(connection);
+  const db = drizzle({ client: connection });
   try {
     const dataset = parseDataset(generateDataset());
     await seedCatalog(db, dataset, { offerSeed: JKU_SEED });

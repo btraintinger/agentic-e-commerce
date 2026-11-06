@@ -1,13 +1,16 @@
-import { and, asc, eq, inArray, sql, type SQL, type SQLWrapper } from "drizzle-orm";
+import { and, EmptyFilter, sql, type RelationsFilter, type SQL, type SQLWrapper } from "drizzle-orm";
 
 import { matchesProductSearch } from "~/product-search";
 import type { Offer, Product, ValidateRequest, Warehouse } from "~/types";
 import { validateCart } from "~/validate";
 import type { db } from "./index";
-import { categories, offers, products, variants, vendors, vouchers, warehouses } from "./schema";
+import type { relations } from "./relations";
+import type { offers, warehouses } from "./schema";
 
 type Database = typeof db;
-type Reader = Pick<Database, "query" | "select">;
+type Reader = Pick<Database, "query">;
+type ProductWhere = RelationsFilter<(typeof relations)["products"], typeof relations>;
+type OfferWhere = { RAW: (table: typeof offers) => SQL | typeof EmptyFilter };
 
 type ProductFilters = {
   category?: string;
@@ -21,7 +24,7 @@ function isUnrepresentableText(value: string) {
 }
 
 function inTextSet(column: SQLWrapper, values: string[]) {
-  return sql`${column} in (select jsonb_array_elements_text(${JSON.stringify(values)}::jsonb))`;
+  return sql`${column} in (select jsonb_array_elements_text(${sql.param(values)}::jsonb))`;
 }
 
 function toWarehouse({ position: _, packageTax, ...warehouse }: typeof warehouses.$inferSelect): Warehouse {
@@ -39,19 +42,18 @@ function toOffer({
   };
 }
 
-function productsWithVariants(reader: Reader, where?: SQL, offerWhere?: SQL) {
+function productsWithVariants(reader: Reader, where: ProductWhere, offerWhere?: OfferWhere) {
   return reader.query.products.findMany({
     where,
     columns: { position: false },
-    orderBy: asc(products.position),
+    orderBy: { position: "asc" },
     with: {
       variants: {
-        where: offerWhere && inArray(variants.id, reader.select({ id: offers.variantId })
-          .from(offers).where(offerWhere)),
+        where: offerWhere ? { offers: offerWhere } : EmptyFilter,
         columns: { productId: false, position: false },
-        orderBy: asc(variants.position),
+        orderBy: { position: "asc" },
         with: {
-          offers: { where: offerWhere, orderBy: asc(offers.position) },
+          offers: { where: offerWhere ?? EmptyFilter, orderBy: { position: "asc" } },
         },
       },
     },
@@ -65,15 +67,10 @@ function productsWithVariants(reader: Reader, where?: SQL, offerWhere?: SQL) {
   })));
 }
 
-function hasOffer(reader: Reader, where: SQL) {
-  return inArray(products.id, reader.select({ id: variants.productId }).from(offers)
-    .innerJoin(variants, eq(variants.id, offers.variantId)).where(where));
-}
-
 export function listCategories(reader: Reader) {
   return reader.query.categories.findMany({
     columns: { position: false },
-    orderBy: asc(categories.position),
+    orderBy: { position: "asc" },
   });
 }
 
@@ -81,25 +78,27 @@ export function listCategoryProducts(database: Database, id: string) {
   if (isUnrepresentableText(id)) return undefined;
   return database.transaction(async (tx) => {
     const category = await tx.query.categories.findFirst({
-      where: eq(categories.id, id),
+      where: { id },
       columns: { id: true },
     });
     if (!category) return undefined;
-    return productsWithVariants(tx, eq(products.categoryId, id));
+    return productsWithVariants(tx, { categoryId: id });
   }, { isolationLevel: "repeatable read", accessMode: "read only" });
 }
 
 export async function listProducts(reader: Reader, { category, q, minPrice, maxPrice }: ProductFilters): Promise<Product[]> {
   if ((category && isUnrepresentableText(category)) || (q && isUnrepresentableText(q))) return [];
-  const priceMatch = and(
-    minPrice === undefined ? undefined : sql`${offers.price} >= ${minPrice}::numeric`,
-    maxPrice === undefined ? undefined : sql`${offers.price} <= ${maxPrice}::numeric`,
-  );
+  const priceMatch: OfferWhere = {
+    RAW: (table) => and(
+      minPrice === undefined ? undefined : sql`${table.price} >= ${minPrice}::numeric`,
+      maxPrice === undefined ? undefined : sql`${table.price} <= ${maxPrice}::numeric`,
+    ) ?? EmptyFilter,
+  };
 
-  const matchingProducts = await productsWithVariants(reader, and(
-    category ? eq(products.categoryId, category) : undefined,
-    priceMatch ? hasOffer(reader, priceMatch) : undefined,
-  ));
+  const matchingProducts = await productsWithVariants(reader, {
+    ...(category ? { categoryId: category } : {}),
+    ...(minPrice !== undefined || maxPrice !== undefined ? { variants: { offers: priceMatch } } : {}),
+  });
   const lowerQuery = q?.toLowerCase();
   return lowerQuery
     ? matchingProducts.filter((product) => matchesProductSearch(product, lowerQuery))
@@ -108,27 +107,27 @@ export async function listProducts(reader: Reader, { category, q, minPrice, maxP
 
 export async function findProduct(reader: Reader, id: string) {
   if (isUnrepresentableText(id)) return undefined;
-  const [product] = await productsWithVariants(reader, eq(products.id, id));
+  const [product] = await productsWithVariants(reader, { id });
   return product;
 }
 
 export function listVendors(reader: Reader) {
   return reader.query.vendors.findMany({
     columns: { position: false },
-    orderBy: asc(vendors.position),
+    orderBy: { position: "asc" },
   });
 }
 
 export function findVendor(reader: Reader, id: string) {
   if (isUnrepresentableText(id)) return undefined;
   return reader.query.vendors.findFirst({
-    where: eq(vendors.id, id),
+    where: { id },
     columns: { position: false },
   });
 }
 
 export async function listWarehouses(reader: Reader) {
-  const rows = await reader.query.warehouses.findMany({ orderBy: asc(warehouses.position) });
+  const rows = await reader.query.warehouses.findMany({ orderBy: { position: "asc" } });
   return rows.map(toWarehouse);
 }
 
@@ -136,18 +135,18 @@ export async function validateCatalogCart(database: Database, input: ValidateReq
   return database.transaction(async (tx) => {
     const offerIds = [...new Set(input.items.map(({ offerId }) => offerId))]
       .filter((id) => !isUnrepresentableText(id));
-    const offerWhere = inTextSet(offers.id, offerIds);
+    const offerWhere: OfferWhere = { RAW: (table) => inTextSet(table.id, offerIds) };
     const cartProducts = offerIds.length
-      ? await productsWithVariants(tx, hasOffer(tx, offerWhere), offerWhere)
+      ? await productsWithVariants(tx, { variants: { offers: offerWhere } }, offerWhere)
       : [];
     const warehouseIds = [...new Set(cartProducts.flatMap(({ variants }) =>
       variants.flatMap(({ offers }) => offers.map(({ warehouseId }) => warehouseId)),
     ))];
     const cartWarehouses = warehouseIds.length
-      ? await tx.query.warehouses.findMany({ where: inTextSet(warehouses.id, warehouseIds) })
+      ? await tx.query.warehouses.findMany({ where: { RAW: (table) => inTextSet(table.id, warehouseIds) } })
       : [];
     const voucher = input.voucherCode && !isUnrepresentableText(input.voucherCode)
-      ? await tx.query.vouchers.findFirst({ where: eq(vouchers.code, input.voucherCode) })
+      ? await tx.query.vouchers.findFirst({ where: { code: input.voucherCode } })
       : undefined;
 
     return validateCart(input, {

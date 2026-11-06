@@ -1,0 +1,2082 @@
+{
+  "type": "base",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "16abb6c8-d60f-4651-b2cc-b2a3a4397012",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_enum",
+      "statementTarget": [
+        "enum",
+        "public",
+        "webshop_stock_level"
+      ],
+      "writes": [
+        "s|enum|public.webshop_stock_level",
+        "n|enum|public.webshop_stock_level",
+        "e|enum|public.webshop_stock_level",
+        "n|type|public.webshop_stock_level"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_enum",
+      "statementTarget": [
+        "enum",
+        "public",
+        "webshop_voucher_type"
+      ],
+      "writes": [
+        "s|enum|public.webshop_voucher_type",
+        "n|enum|public.webshop_voucher_type",
+        "e|enum|public.webshop_voucher_type",
+        "n|type|public.webshop_voucher_type"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_account"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_account",
+        "n|tbl|public.webshop_account",
+        "e|tbl|public.webshop_account",
+        "n|rel|public.webshop_account",
+        "n|type|public.webshop_account",
+        "n|rel|public.webshop_account_provider_providerAccountId_pk"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_category"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_category",
+        "n|tbl|public.webshop_category",
+        "e|tbl|public.webshop_category",
+        "n|rel|public.webshop_category",
+        "n|type|public.webshop_category",
+        "n|rel|public.webshop_category_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_offer"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_offer",
+        "n|tbl|public.webshop_offer",
+        "e|tbl|public.webshop_offer",
+        "n|rel|public.webshop_offer",
+        "n|type|public.webshop_offer",
+        "n|rel|public.webshop_offer_pkey"
+      ],
+      "reads": [
+        "n|sch|public",
+        "n|enum|public.webshop_stock_level"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_post"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_post",
+        "n|tbl|public.webshop_post",
+        "e|tbl|public.webshop_post",
+        "n|rel|public.webshop_post",
+        "n|type|public.webshop_post",
+        "n|rel|public.webshop_post_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_product"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_product",
+        "n|tbl|public.webshop_product",
+        "e|tbl|public.webshop_product",
+        "n|rel|public.webshop_product",
+        "n|type|public.webshop_product",
+        "n|rel|public.webshop_product_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_session"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_session",
+        "n|tbl|public.webshop_session",
+        "e|tbl|public.webshop_session",
+        "n|rel|public.webshop_session",
+        "n|type|public.webshop_session",
+        "n|rel|public.webshop_session_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_user"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_user",
+        "n|tbl|public.webshop_user",
+        "e|tbl|public.webshop_user",
+        "n|rel|public.webshop_user",
+        "n|type|public.webshop_user",
+        "n|rel|public.webshop_user_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_variant"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_variant",
+        "n|tbl|public.webshop_variant",
+        "e|tbl|public.webshop_variant",
+        "n|rel|public.webshop_variant",
+        "n|type|public.webshop_variant",
+        "n|rel|public.webshop_variant_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_vendor"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_vendor",
+        "n|tbl|public.webshop_vendor",
+        "e|tbl|public.webshop_vendor",
+        "n|rel|public.webshop_vendor",
+        "n|type|public.webshop_vendor",
+        "n|rel|public.webshop_vendor_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_verification_token"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_verification_token",
+        "n|tbl|public.webshop_verification_token",
+        "e|tbl|public.webshop_verification_token",
+        "n|rel|public.webshop_verification_token",
+        "n|type|public.webshop_verification_token",
+        "n|rel|public.webshop_verification_token_identifier_token_pk"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_voucher"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_voucher",
+        "n|tbl|public.webshop_voucher",
+        "e|tbl|public.webshop_voucher",
+        "n|rel|public.webshop_voucher",
+        "n|type|public.webshop_voucher",
+        "n|rel|public.webshop_voucher_pkey"
+      ],
+      "reads": [
+        "n|sch|public",
+        "n|enum|public.webshop_voucher_type"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_warehouse"
+      ],
+      "writes": [
+        "s|tbl|public.webshop_warehouse",
+        "n|tbl|public.webshop_warehouse",
+        "e|tbl|public.webshop_warehouse",
+        "n|rel|public.webshop_warehouse",
+        "n|type|public.webshop_warehouse",
+        "n|rel|public.webshop_warehouse_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "webshop_account",
+        "account_user_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.account_user_id_idx",
+        "n|idx|public.account_user_id_idx",
+        "e|idx|public.account_user_id_idx",
+        "n|rel|public.account_user_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_account",
+        "n|sch|public",
+        "n|col|public.webshop_account.userId"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "webshop_offer",
+        "offer_variant_idx"
+      ],
+      "writes": [
+        "s|idx|public.offer_variant_idx",
+        "n|idx|public.offer_variant_idx",
+        "e|idx|public.offer_variant_idx",
+        "n|rel|public.offer_variant_idx"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_offer",
+        "n|sch|public",
+        "n|col|public.webshop_offer.variantId"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "webshop_post",
+        "created_by_idx"
+      ],
+      "writes": [
+        "s|idx|public.created_by_idx",
+        "n|idx|public.created_by_idx",
+        "e|idx|public.created_by_idx",
+        "n|rel|public.created_by_idx"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_post",
+        "n|sch|public",
+        "n|col|public.webshop_post.createdById"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "webshop_post",
+        "name_idx"
+      ],
+      "writes": [
+        "s|idx|public.name_idx",
+        "n|idx|public.name_idx",
+        "e|idx|public.name_idx",
+        "n|rel|public.name_idx"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_post",
+        "n|sch|public",
+        "n|col|public.webshop_post.name"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "webshop_product",
+        "product_category_idx"
+      ],
+      "writes": [
+        "s|idx|public.product_category_idx",
+        "n|idx|public.product_category_idx",
+        "e|idx|public.product_category_idx",
+        "n|rel|public.product_category_idx"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_product",
+        "n|sch|public",
+        "n|col|public.webshop_product.categoryId"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "webshop_session",
+        "t_user_id_idx"
+      ],
+      "writes": [
+        "s|idx|public.t_user_id_idx",
+        "n|idx|public.t_user_id_idx",
+        "e|idx|public.t_user_id_idx",
+        "n|rel|public.t_user_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_session",
+        "n|sch|public",
+        "n|col|public.webshop_session.userId"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "webshop_variant",
+        "variant_product_idx"
+      ],
+      "writes": [
+        "s|idx|public.variant_product_idx",
+        "n|idx|public.variant_product_idx",
+        "e|idx|public.variant_product_idx",
+        "n|rel|public.variant_product_idx"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_variant",
+        "n|sch|public",
+        "n|col|public.webshop_variant.productId"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_account"
+      ],
+      "writes": [
+        "s|fk|public.webshop_account.webshop_account_userId_webshop_user_id_fk",
+        "n|fk|public.webshop_account.webshop_account_userId_webshop_user_id_fk",
+        "e|fk|public.webshop_account.webshop_account_userId_webshop_user_id_fk",
+        "n|con|public.webshop_account.webshop_account_userId_webshop_user_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_account",
+        "n|sch|public",
+        "n|tbl|public.webshop_user",
+        "n|sch|public",
+        "n|col|public.webshop_account.userId",
+        "n|col|public.webshop_user.id",
+        "e|uniqueness|public.webshop_user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_offer"
+      ],
+      "writes": [
+        "s|fk|public.webshop_offer.webshop_offer_variantId_webshop_variant_id_fk",
+        "n|fk|public.webshop_offer.webshop_offer_variantId_webshop_variant_id_fk",
+        "e|fk|public.webshop_offer.webshop_offer_variantId_webshop_variant_id_fk",
+        "n|con|public.webshop_offer.webshop_offer_variantId_webshop_variant_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_offer",
+        "n|sch|public",
+        "n|tbl|public.webshop_variant",
+        "n|sch|public",
+        "n|col|public.webshop_offer.variantId",
+        "n|col|public.webshop_variant.id",
+        "e|uniqueness|public.webshop_variant.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_offer"
+      ],
+      "writes": [
+        "s|fk|public.webshop_offer.webshop_offer_vendorId_webshop_vendor_id_fk",
+        "n|fk|public.webshop_offer.webshop_offer_vendorId_webshop_vendor_id_fk",
+        "e|fk|public.webshop_offer.webshop_offer_vendorId_webshop_vendor_id_fk",
+        "n|con|public.webshop_offer.webshop_offer_vendorId_webshop_vendor_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_offer",
+        "n|sch|public",
+        "n|tbl|public.webshop_vendor",
+        "n|sch|public",
+        "n|col|public.webshop_offer.vendorId",
+        "n|col|public.webshop_vendor.id",
+        "e|uniqueness|public.webshop_vendor.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_offer"
+      ],
+      "writes": [
+        "s|fk|public.webshop_offer.webshop_offer_warehouseId_webshop_warehouse_id_fk",
+        "n|fk|public.webshop_offer.webshop_offer_warehouseId_webshop_warehouse_id_fk",
+        "e|fk|public.webshop_offer.webshop_offer_warehouseId_webshop_warehouse_id_fk",
+        "n|con|public.webshop_offer.webshop_offer_warehouseId_webshop_warehouse_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_offer",
+        "n|sch|public",
+        "n|tbl|public.webshop_warehouse",
+        "n|sch|public",
+        "n|col|public.webshop_offer.warehouseId",
+        "n|col|public.webshop_warehouse.id",
+        "e|uniqueness|public.webshop_warehouse.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_post"
+      ],
+      "writes": [
+        "s|fk|public.webshop_post.webshop_post_createdById_webshop_user_id_fk",
+        "n|fk|public.webshop_post.webshop_post_createdById_webshop_user_id_fk",
+        "e|fk|public.webshop_post.webshop_post_createdById_webshop_user_id_fk",
+        "n|con|public.webshop_post.webshop_post_createdById_webshop_user_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_post",
+        "n|sch|public",
+        "n|tbl|public.webshop_user",
+        "n|sch|public",
+        "n|col|public.webshop_post.createdById",
+        "n|col|public.webshop_user.id",
+        "e|uniqueness|public.webshop_user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_product"
+      ],
+      "writes": [
+        "s|fk|public.webshop_product.webshop_product_categoryId_webshop_category_id_fk",
+        "n|fk|public.webshop_product.webshop_product_categoryId_webshop_category_id_fk",
+        "e|fk|public.webshop_product.webshop_product_categoryId_webshop_category_id_fk",
+        "n|con|public.webshop_product.webshop_product_categoryId_webshop_category_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_product",
+        "n|sch|public",
+        "n|tbl|public.webshop_category",
+        "n|sch|public",
+        "n|col|public.webshop_product.categoryId",
+        "n|col|public.webshop_category.id",
+        "e|uniqueness|public.webshop_category.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_session"
+      ],
+      "writes": [
+        "s|fk|public.webshop_session.webshop_session_userId_webshop_user_id_fk",
+        "n|fk|public.webshop_session.webshop_session_userId_webshop_user_id_fk",
+        "e|fk|public.webshop_session.webshop_session_userId_webshop_user_id_fk",
+        "n|con|public.webshop_session.webshop_session_userId_webshop_user_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_session",
+        "n|sch|public",
+        "n|tbl|public.webshop_user",
+        "n|sch|public",
+        "n|col|public.webshop_session.userId",
+        "n|col|public.webshop_user.id",
+        "e|uniqueness|public.webshop_user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_variant"
+      ],
+      "writes": [
+        "s|fk|public.webshop_variant.webshop_variant_productId_webshop_product_id_fk",
+        "n|fk|public.webshop_variant.webshop_variant_productId_webshop_product_id_fk",
+        "e|fk|public.webshop_variant.webshop_variant_productId_webshop_product_id_fk",
+        "n|con|public.webshop_variant.webshop_variant_productId_webshop_product_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_variant",
+        "n|sch|public",
+        "n|tbl|public.webshop_product",
+        "n|sch|public",
+        "n|col|public.webshop_variant.productId",
+        "n|col|public.webshop_product.id",
+        "e|uniqueness|public.webshop_product.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "webshop_voucher"
+      ],
+      "writes": [
+        "s|fk|public.webshop_voucher.webshop_voucher_categoryId_webshop_category_id_fk",
+        "n|fk|public.webshop_voucher.webshop_voucher_categoryId_webshop_category_id_fk",
+        "e|fk|public.webshop_voucher.webshop_voucher_categoryId_webshop_category_id_fk",
+        "n|con|public.webshop_voucher.webshop_voucher_categoryId_webshop_category_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.webshop_voucher",
+        "n|sch|public",
+        "n|tbl|public.webshop_category",
+        "n|sch|public",
+        "n|col|public.webshop_voucher.categoryId",
+        "n|col|public.webshop_category.id",
+        "e|uniqueness|public.webshop_category.id"
+      ]
+    }
+  ],
+  "ddl": [
+    {
+      "schema": "public",
+      "name": "webshop_account",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_category",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_offer",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_post",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_product",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_session",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_user",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_variant",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_vendor",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_verification_token",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_voucher",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_warehouse",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_stock_level",
+      "values": [
+        "NO",
+        "LITTLE",
+        "ALOT"
+      ],
+      "entityType": "enums"
+    },
+    {
+      "schema": "public",
+      "name": "webshop_voucher_type",
+      "values": [
+        "percent",
+        "fixed"
+      ],
+      "entityType": "enums"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "userId",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "type",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "provider",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "providerAccountId",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "refresh_token",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "access_token",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "expires_at",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "token_type",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "scope",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "id_token",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "session_state",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_category",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_category",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_category",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_category",
+      "name": "position",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "variantId",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "vendorId",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "warehouseId",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "price",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "shippingCost",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "freeShippingThreshold",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "deliveryMin",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "deliveryMax",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "stock",
+      "type": "webshop_stock_level",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "position",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "id",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": {
+        "name": "webshop_post_id_seq",
+        "type": "byDefault",
+        "startWith": "1",
+        "minValue": "1",
+        "maxValue": "2147483647",
+        "increment": "1",
+        "cache": 1,
+        "cycle": false
+      },
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "name",
+      "type": "varchar(256)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "createdById",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "createdAt",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "updatedAt",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "categoryId",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "brand",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "tags",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "attributes",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "position",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_session",
+      "name": "sessionToken",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_session",
+      "name": "userId",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_session",
+      "name": "expires",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_user",
+      "name": "id",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_user",
+      "name": "name",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_user",
+      "name": "email",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_user",
+      "name": "emailVerified",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_user",
+      "name": "image",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "productId",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "sku",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "attributes",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "position",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_vendor",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_vendor",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_vendor",
+      "name": "rating",
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_vendor",
+      "name": "position",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_verification_token",
+      "name": "identifier",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_verification_token",
+      "name": "token",
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_verification_token",
+      "name": "expires",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "code",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "type",
+      "type": "webshop_voucher_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "value",
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "minOrderValue",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "validUntil",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "categoryId",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_warehouse",
+      "name": "id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_warehouse",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_warehouse",
+      "name": "country",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_warehouse",
+      "name": "packageTax",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_warehouse",
+      "name": "position",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "account_user_id_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "userId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "offer_variant_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "variantId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "created_by_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "createdById",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "name_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "name",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "product_category_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "categoryId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_session",
+      "name": "t_user_id_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "userId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "variant_product_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "productId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "webshop_account_userId_webshop_user_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "userId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "webshop_offer_variantId_webshop_variant_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "variantId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_variant",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "webshop_offer_vendorId_webshop_vendor_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "vendorId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_vendor",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "webshop_offer_warehouseId_webshop_warehouse_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "warehouseId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_warehouse",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "webshop_post_createdById_webshop_user_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "createdById"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "webshop_product_categoryId_webshop_category_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "categoryId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_category",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_session",
+      "name": "webshop_session_userId_webshop_user_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "userId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "webshop_variant_productId_webshop_product_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "productId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_product",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "webshop_voucher_categoryId_webshop_category_id_fk",
+      "nameExplicit": false,
+      "columns": [
+        "categoryId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "webshop_category",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_account",
+      "name": "webshop_account_provider_providerAccountId_pk",
+      "columns": [
+        "provider",
+        "providerAccountId"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_category",
+      "name": "webshop_category_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_offer",
+      "name": "webshop_offer_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_post",
+      "name": "webshop_post_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_product",
+      "name": "webshop_product_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_session",
+      "name": "webshop_session_pkey",
+      "columns": [
+        "sessionToken"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_user",
+      "name": "webshop_user_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_variant",
+      "name": "webshop_variant_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_vendor",
+      "name": "webshop_vendor_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_verification_token",
+      "name": "webshop_verification_token_identifier_token_pk",
+      "columns": [
+        "identifier",
+        "token"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_voucher",
+      "name": "webshop_voucher_pkey",
+      "columns": [
+        "code"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "webshop_warehouse",
+      "name": "webshop_warehouse_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
@@ -7,6 +8,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { generateDataset, JKU_SEED } from "../scripts/generate-data.mjs";
 import { parseDataset } from "~/dataset";
 import { createCaller } from "~/server/api/root";
+import { createAuthAdapter } from "~/server/auth/adapter";
+import { relations } from "~/server/db/relations";
 import * as schema from "~/server/db/schema";
 import { seedCatalog } from "~/server/db/seed-catalog";
 import type { Product } from "~/types";
@@ -26,7 +29,7 @@ function catalogTemplate(products: Product[]) {
 
 describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
   const connection = postgres(databaseUrl ?? "postgresql://unused:unused@127.0.0.1:1/unused");
-  const db = drizzle(connection, { schema });
+  const db = drizzle({ client: connection, relations });
   const api = createCaller({
     db,
     headers: new Headers(),
@@ -167,6 +170,33 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
     broken.products[0].categoryId = "missing";
     await expect(seedCatalog(db, broken)).rejects.toThrow();
     expect(await api.products.byId({ id: dataset.products[0].id })).toEqual(dataset.products[0]);
+  });
+
+  it("persists Auth.js users, linked accounts, and sessions with Drizzle v1", async () => {
+    const adapter = createAuthAdapter(db);
+    assert(adapter.createUser && adapter.linkAccount && adapter.getUserByAccount &&
+      adapter.createSession && adapter.getSessionAndUser);
+
+    const token = crypto.randomUUID();
+    const user = await adapter.createUser({
+      id: token,
+      email: `${token}@example.invalid`,
+      emailVerified: null,
+    });
+
+    try {
+      const account = { provider: "discord", providerAccountId: token };
+      await adapter.linkAccount({ ...account, userId: user.id, type: "oauth" });
+      expect(await adapter.getUserByAccount(account)).toEqual(user);
+
+      const session = { sessionToken: token, userId: user.id, expires: new Date(Date.now() + 60_000) };
+      expect(await adapter.createSession(session)).toEqual(session);
+      expect(await adapter.getSessionAndUser(token)).toEqual({ user, session });
+    } finally {
+      await db.delete(schema.sessions).where(eq(schema.sessions.userId, user.id));
+      await db.delete(schema.accounts).where(eq(schema.accounts.userId, user.id));
+      await db.delete(schema.users).where(eq(schema.users.id, user.id));
+    }
   });
 
   it("refines JKU offers deterministically and keeps the curated catalog and unrelated rows", async () => {

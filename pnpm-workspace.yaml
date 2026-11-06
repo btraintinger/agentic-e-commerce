@@ -1,3 +1,5 @@
 allowBuilds:
   esbuild: true
   sharp: true
+patchedDependencies:
+  '@auth/drizzle-adapter@1.11.3': patches/@auth__drizzle-adapter@1.11.3.patch

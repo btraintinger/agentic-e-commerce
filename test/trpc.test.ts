@@ -7,10 +7,10 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { clientRateLimitKey } from "~/server/api/cart-rate-limit";
 import { appRouter, type AppRouter } from "~/server/api/root";
-import * as schema from "~/server/db/schema";
+import { relations } from "~/server/db/relations";
 
 const connection = postgres("postgresql://unused:unused@127.0.0.1:1/unused");
-const db = drizzle(connection, { schema });
+const db = drizzle({ client: connection, relations });
 const url = "http://localhost/api/trpc";
 
 afterAll(() => connection.end());
