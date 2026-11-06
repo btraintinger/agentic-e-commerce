@@ -4,14 +4,25 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { generateDataset } from "../scripts/generate-data.mjs";
+import { generateDataset, JKU_SEED } from "../scripts/generate-data.mjs";
 import { parseDataset } from "~/dataset";
 import { createCaller } from "~/server/api/root";
 import * as schema from "~/server/db/schema";
 import { seedCatalog } from "~/server/db/seed-catalog";
+import type { Product } from "~/types";
 import { validateCart } from "~/validate";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
+
+function catalogTemplate(products: Product[]) {
+  return products.map(({ variants, ...product }) => ({
+    ...product,
+    variants: variants.map(({ offers, ...variant }) => ({
+      ...variant,
+      offers: offers.map(({ stock: _, deliveryDays: _delivery, ...offer }) => offer),
+    })),
+  }));
+}
 
 describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
   const connection = postgres(databaseUrl ?? "postgresql://unused:unused@127.0.0.1:1/unused");
@@ -158,27 +169,36 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
     expect(await api.products.byId({ id: dataset.products[0].id })).toEqual(dataset.products[0]);
   });
 
-  it("reseeds the fixed JKU catalog and keeps unrelated rows", async () => {
+  it("refines JKU offers deterministically and keeps the curated catalog and unrelated rows", async () => {
     const userId = crypto.randomUUID();
     await db.insert(schema.users).values({ id: userId, email: "seed-check@example.invalid" });
     try {
       await db.insert(schema.posts).values({ createdById: userId, name: "Seed check" });
 
       const generated = parseDataset(generateDataset());
-      await seedCatalog(db, generated);
+      await seedCatalog(db, generated, { offerSeed: JKU_SEED });
       const products = await api.products.list();
       const warehouses = await api.warehouses.list();
       const vouchers = await db.select().from(schema.vouchers).orderBy(schema.vouchers.code);
       const offers = products.flatMap(({ variants }) => variants.flatMap(({ offers }) => offers));
 
-      expect(products).toEqual(generated.products);
+      const originalOffers = generated.products.flatMap(({ variants }) =>
+        variants.flatMap(({ offers }) => offers),
+      );
+      expect(catalogTemplate(products)).toEqual(catalogTemplate(generated.products));
+      expect(offers.some(({ stock }, index) => stock !== originalOffers[index].stock)).toBe(true);
+      expect(offers.some(({ deliveryDays }, index) =>
+        deliveryDays.min !== originalOffers[index].deliveryDays.min ||
+        deliveryDays.max !== originalOffers[index].deliveryDays.max,
+      )).toBe(true);
       expect(await api.categories.list()).toEqual(generated.categories);
       expect(products.every(({ variants }) =>
         variants.length > 0 && variants.every(({ offers }) => offers.length > 0),
       )).toBe(true);
       expect(offers.every((offer) =>
         Number.isInteger(offer.price) && offer.price >= 0 &&
-        offer.deliveryDays.min <= offer.deliveryDays.max &&
+        offer.deliveryDays.min >= 1 && offer.deliveryDays.min <= 3 &&
+        offer.deliveryDays.max >= 3 && offer.deliveryDays.max <= 12 &&
         (offer.freeShippingThreshold === undefined || offer.shippingCost > 0),
       )).toBe(true);
       expect(offers.filter(({ shippingCost }) => shippingCost === 0).length).toBeGreaterThan(offers.length / 2);
@@ -187,7 +207,7 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
         .toBe(true);
       expect(vouchers.map(({ code }) => code)).toEqual(expect.arrayContaining(["WELCOME10", "EXPIRED2024"]));
 
-      await seedCatalog(db, parseDataset(generateDataset()));
+      await seedCatalog(db, parseDataset(generateDataset()), { offerSeed: JKU_SEED });
       expect(await api.products.list()).toEqual(products);
       expect(await db.select().from(schema.vouchers).orderBy(schema.vouchers.code)).toEqual(vouchers);
       expect(await db.select().from(schema.users).where(eq(schema.users.id, userId))).toHaveLength(1);

@@ -23,12 +23,13 @@ starter is at `http://localhost:3000` and tRPC is at
 `http://localhost:3000/api/trpc`. The app connects to Docker Postgres at
 `127.0.0.1:5433`. The Compose volume retains the database when you stop the container.
 
-`pnpm db:seed` generates the JKU catalog in memory with fixed seed `2026`.
-The generator uses the same curated product definitions, variants, and offer
-rules as the JSON export. To write a separate copy, run
+`pnpm db:seed` builds the curated JKU catalog with fixed seed `2026`. Drizzle
+Seed refinements generate each offer's stock and delivery window. The JSON
+export uses the same catalog, prices, and shipping rules with the generator's
+base stock and delivery values. To export it, run
 `node scripts/generate-data.mjs /tmp/jku-catalog.json`.
 
-To import your own catalog JSON, run
+To import a catalog JSON file as supplied, run
 `DATASET_PATH=/path/to/catalog.json pnpm db:seed`.
 
 Both modes replace the webshop catalog and vouchers in one transaction on

@@ -4,7 +4,7 @@ import postgres from "postgres";
 
 import { parseDataset, readDataset } from "../src/dataset";
 import { seedCatalog } from "../src/server/db/seed-catalog";
-import { generateDataset } from "./generate-data.mjs";
+import { generateDataset, JKU_SEED } from "./generate-data.mjs";
 
 async function main() {
   nextEnv.loadEnvConfig(process.cwd());
@@ -14,8 +14,8 @@ async function main() {
   try {
     const fixturePath = process.env.DATASET_PATH;
     const dataset = fixturePath ? readDataset(fixturePath) : parseDataset(generateDataset());
-    await seedCatalog(db, dataset);
-    const action = fixturePath ? "Imported from fixture" : "Generated from the fixed JKU seed";
+    await seedCatalog(db, dataset, { offerSeed: fixturePath ? undefined : JKU_SEED });
+    const action = fixturePath ? "Imported from fixture" : "Generated JKU catalog with Drizzle Seed";
     console.log(`${action}: ${dataset.products.length} products and ${dataset.categories.length} categories`);
   } finally {
     await connection.end();

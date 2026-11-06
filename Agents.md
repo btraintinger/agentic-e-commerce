@@ -97,9 +97,10 @@ Voucher records stay server-side. Clients can submit a code to `cart.validate`.
 
 ## Dataset
 
-- Use the shared generator in `scripts/generate-data.mjs` for fixed-seed
-  catalog generation and JSON exports. Seed only webshop tables and keep
-  Auth.js and starter post data intact.
+- Use the shared generator in `scripts/generate-data.mjs` for the base catalog
+  and JSON exports. Use Drizzle Seed refinements for generated offer stock
+  and delivery, and preserve supplied values when importing JSON. Seed only
+  webshop tables and keep Auth.js and starter post data intact.
 - Keep generated catalog data out of source control. Pass an explicit output
   path to `node scripts/generate-data.mjs` when exporting JSON.
 - Curated "JKU Starter Set" products are tagged `starter-set`.

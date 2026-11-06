@@ -280,7 +280,9 @@ function mulberry32(seed) {
   };
 }
 
-export function generateDataset(seed = 2026) {
+export const JKU_SEED = 2026;
+
+export function generateDataset(seed = JKU_SEED) {
   const random = mulberry32(seed);
 
   let idCounter = 0;
