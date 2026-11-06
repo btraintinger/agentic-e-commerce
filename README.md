@@ -23,11 +23,14 @@ starter is at `http://localhost:3000` and tRPC is at
 `http://localhost:3000/api/trpc`. The app connects to Docker Postgres at
 `127.0.0.1:5433`. The Compose volume retains the database when you stop the container.
 
-`pnpm db:seed` replaces the catalog and vouchers from `data/dataset.json` in one
-transaction. Rerun it after changing fixtures. Select another fixture with
-`DATASET_PATH=./my-fixture.json pnpm db:seed`. The seed leaves Auth.js and starter
-post tables alone. Regenerate the default fixture with
+`pnpm db:seed` uses Drizzle Seed to generate the same sample catalog on each
+run. To import the curated JKU fixture with its original products and IDs,
+run `DATASET_PATH=data/dataset.json pnpm db:seed`. Use another `DATASET_PATH`
+to import a custom JSON fixture. Regenerate the curated fixture with
 `node scripts/generate-data.mjs`.
+
+Both modes replace the webshop catalog and vouchers in one transaction on
+every run. Auth.js and starter post data stay intact.
 
 Auth.js includes the Drizzle adapter and the starter's Discord provider. The
 webshop procedures are public and work with the Auth.js values in `.env.example`
@@ -75,8 +78,9 @@ pnpm typecheck && pnpm test
 pnpm build
 ```
 
-The PostgreSQL integration suite uses a dedicated, disposable database. Create
-it once and opt in by setting its URL:
+The PostgreSQL integration suite uses a dedicated, disposable database. It
+checks API behavior with the curated fixture and also exercises Drizzle Seed.
+Create the database once and opt in by setting its URL:
 
 ```sh
 docker compose exec -T postgres createdb -U webshop webshop_test

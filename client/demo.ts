@@ -2,6 +2,7 @@ import { createTRPCClient, httpLink } from "@trpc/client";
 import superjson from "superjson";
 
 import type { AppRouter } from "../src/server/api/root";
+import type { Product, ValidateRequest } from "../src/types";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 const api = createTRPCClient<AppRouter>({
@@ -95,18 +96,15 @@ async function step3(productId: string | undefined) {
 // ---------------------------------------------------------------------------
 // Step 4 – Compare offers for one variant
 // ---------------------------------------------------------------------------
-async function step4() {
+async function step4(): Promise<Product | undefined> {
   heading("4. Compare Offers for a Variant");
   try {
-    // Use the "Campus Clothing – Urban Jacket" or similar product with multiple
-    // offers.  For deterministic behaviour we grab a known product that has
-    // variants with several offers – the ThinkPad X1 Carbon Student Edition.
     const products = await api.products.list.query({ q: "ThinkPad X1 Carbon" });
     const tp = products[0];
     if (!tp) { console.log("  SKIP (ThinkPad not found)"); return; }
 
     const variant = tp.variants.find((v) => v.offers.length > 1);
-    if (!variant) { console.log("  SKIP (no variant with multiple offers)"); return; }
+    if (!variant) { console.log("  SKIP (no variant with multiple offers)"); return tp; }
 
     console.log(`  Product: ${tp.name}`);
     console.log(`  Variant: ${variant.name} (${variant.sku})`);
@@ -149,20 +147,37 @@ async function step4() {
       `  Fewest packages: ${maxShared} offer(s) share vendor+warehouse ` +
       `(${bestVendor.slice(0, 27)}… | ${bestWarehouse.slice(0, 27)}…)`,
     );
+    return tp;
   } catch (err: unknown) {
     console.log(`  ERROR: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
+type CartItems = ValidateRequest["items"];
+
+function selectDemoItems(product?: Product): CartItems {
+  const available = product?.variants.flatMap(({ offers }) => offers)
+    .filter(({ stock }) => stock !== "NO");
+  const first = available?.[0];
+  if (!first) return [];
+
+  const second = available.find(({ vendorId, warehouseId }) =>
+    vendorId !== first.vendorId || warehouseId !== first.warehouseId,
+  );
+  const items = [{ offerId: first.id, quantity: 1 }];
+  if (second) items.push({ offerId: second.id, quantity: 2 });
+  return items;
+}
+
 // ---------------------------------------------------------------------------
 // Step 5 – Validate a problematic cart
 // ---------------------------------------------------------------------------
-async function step5() {
+async function step5(items: CartItems) {
   heading("5. Validate Cart — cart.validate (with errors)");
   try {
     const cart = {
       items: [
-        { offerId: "off-00000000-0018-0000-000000000000", quantity: 1 },
+        ...items.slice(0, 1),
         { offerId: "off-nonexistent", quantity: 1 },
         { offerId: "off-nonexistent-another", quantity: 1 },
       ],
@@ -186,28 +201,11 @@ async function step5() {
 // ---------------------------------------------------------------------------
 // Step 6 – Successful cart validation (no voucher)
 // ---------------------------------------------------------------------------
-async function step6() {
+async function step6(items: CartItems) {
   heading("6. Successful Cart Validation — cart.validate (no voucher)");
+  if (!items.length) { console.log("  SKIP (no stocked ThinkPad offers)"); return; }
   try {
-    const products = await api.products.list.query({ q: "ThinkPad X1 Carbon" });
-    const tp = products[0];
-    if (!tp) { console.log("  SKIP (ThinkPad not found)"); return; }
-
-    const variant = tp.variants.find((v) => {
-      const combos = new Set(v.offers.map((o) => `${o.vendorId}|${o.warehouseId}`));
-      return combos.size >= 2;
-    });
-    if (!variant) { console.log("  SKIP (no variant with multiple vendor+warehouse combos)"); return; }
-
-    const offer1 = variant.offers[0];
-    const offer2 = variant.offers.find(
-      (o) => o.vendorId !== offer1.vendorId || o.warehouseId !== offer1.warehouseId,
-    );
-    if (!offer2) { console.log("  SKIP (could not find 2 offers from different warehouses)"); return; }
-
-    const cart = { items: [{ offerId: offer1.id, quantity: 1 }, { offerId: offer2.id, quantity: 2 }] };
-
-    const data = await api.cart.validate.mutate(cart);
+    const data = await api.cart.validate.mutate({ items });
 
     const vendorNames = new Map<string, string>();
     for (const s of data.shipments) {
@@ -255,17 +253,10 @@ async function step6() {
 // ---------------------------------------------------------------------------
 // Step 7 – Validate with valid voucher WELCOME10
 // ---------------------------------------------------------------------------
-async function step7() {
+async function step7(items: CartItems) {
   heading('7. Validate with Voucher — cart.validate (voucherCode: "WELCOME10")');
   try {
-    const cart = {
-      items: [
-        { offerId: "off-00000000-0018-0000-000000000000", quantity: 1 },
-        { offerId: "off-00000000-0030-0000-000000000000", quantity: 2 },
-      ],
-      voucherCode: "WELCOME10",
-    };
-    const data = await api.cart.validate.mutate(cart);
+    const data = await api.cart.validate.mutate({ items, voucherCode: "WELCOME10" });
     console.log(`  valid:     ${data.valid}`);
     console.log(`  issues:    ${JSON.stringify(data.issues)}`);
     console.log(
@@ -280,17 +271,10 @@ async function step7() {
 // ---------------------------------------------------------------------------
 // Step 8 – Validate with expired voucher EXPIRED2024
 // ---------------------------------------------------------------------------
-async function step8() {
+async function step8(items: CartItems) {
   heading('8. Validate with Expired Voucher — cart.validate (voucherCode: "EXPIRED2024")');
   try {
-    const cart = {
-      items: [
-        { offerId: "off-00000000-0018-0000-000000000000", quantity: 1 },
-        { offerId: "off-00000000-0030-0000-000000000000", quantity: 2 },
-      ],
-      voucherCode: "EXPIRED2024",
-    };
-    const data = await api.cart.validate.mutate(cart);
+    const data = await api.cart.validate.mutate({ items, voucherCode: "EXPIRED2024" });
     console.log(`  valid:  ${data.valid}`);
     console.log("  issues:");
     for (const iss of data.issues) {
@@ -314,11 +298,11 @@ async function main() {
   await step1();
   const firstProductId = await step2();
   await step3(firstProductId);
-  await step4();
-  await step5();
-  await step6();
-  await step7();
-  await step8();
+  const items = selectDemoItems(await step4());
+  await step5(items);
+  await step6(items);
+  await step7(items);
+  await step8(items);
 
   heading("Done");
 }
