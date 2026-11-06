@@ -15,8 +15,8 @@ type ProductFilters = {
   maxPrice?: number;
 };
 
-function containsNul(value: string) {
-  return value.includes("\0");
+function isUnrepresentableText(value: string) {
+  return /[\u0000\uD800-\uDFFF]/u.test(value);
 }
 
 function inTextSet(column: SQLWrapper, values: string[]) {
@@ -77,7 +77,7 @@ export function listCategories(reader: Reader) {
 }
 
 export function listCategoryProducts(database: Database, id: string) {
-  if (containsNul(id)) return undefined;
+  if (isUnrepresentableText(id)) return undefined;
   return database.transaction(async (tx) => {
     const category = await tx.query.categories.findFirst({
       where: eq(categories.id, id),
@@ -89,7 +89,7 @@ export function listCategoryProducts(database: Database, id: string) {
 }
 
 export async function listProducts(reader: Reader, { category, q, minPrice, maxPrice }: ProductFilters): Promise<Product[]> {
-  if ((category && containsNul(category)) || (q && containsNul(q))) return [];
+  if ((category && isUnrepresentableText(category)) || (q && isUnrepresentableText(q))) return [];
   const search = q?.toLowerCase();
   const textMatch = search ? or(
     sql`strpos(lower(${products.name}), ${search}) > 0`,
@@ -110,7 +110,7 @@ export async function listProducts(reader: Reader, { category, q, minPrice, maxP
 }
 
 export async function findProduct(reader: Reader, id: string) {
-  if (containsNul(id)) return undefined;
+  if (isUnrepresentableText(id)) return undefined;
   const [product] = await productsWithVariants(reader, eq(products.id, id));
   return product;
 }
@@ -123,7 +123,7 @@ export function listVendors(reader: Reader) {
 }
 
 export function findVendor(reader: Reader, id: string) {
-  if (containsNul(id)) return undefined;
+  if (isUnrepresentableText(id)) return undefined;
   return reader.query.vendors.findFirst({
     where: eq(vendors.id, id),
     columns: { position: false },
@@ -138,7 +138,7 @@ export async function listWarehouses(reader: Reader) {
 export async function validateCatalogCart(database: Database, input: ValidateRequest) {
   return database.transaction(async (tx) => {
     const offerIds = [...new Set(input.items.map(({ offerId }) => offerId))]
-      .filter((id) => !containsNul(id));
+      .filter((id) => !isUnrepresentableText(id));
     const offerWhere = inTextSet(offers.id, offerIds);
     const cartProducts = offerIds.length
       ? await productsWithVariants(tx, hasOffer(tx, offerWhere), offerWhere)
@@ -149,7 +149,7 @@ export async function validateCatalogCart(database: Database, input: ValidateReq
     const cartWarehouses = warehouseIds.length
       ? await tx.query.warehouses.findMany({ where: inTextSet(warehouses.id, warehouseIds) })
       : [];
-    const voucher = input.voucherCode && !containsNul(input.voucherCode)
+    const voucher = input.voucherCode && !isUnrepresentableText(input.voucherCode)
       ? await tx.query.vouchers.findFirst({ where: eq(vouchers.code, input.voucherCode) })
       : undefined;
 

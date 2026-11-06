@@ -103,26 +103,35 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
     expect(result.shipments).toEqual(validateCart({ items: [validItem] }, dataset).shipments);
   });
 
-  it("handles NULs in catalog and cart input as ordinary misses", async () => {
-    const id = "missing\0id";
-    await expect(api.categories.products({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(api.products.byId({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(api.vendors.byId({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(api.products.list({ q: id })).resolves.toEqual([]);
-    await expect(api.products.list({ category: id })).resolves.toEqual([]);
+  it("handles NULs and unpaired surrogates as ordinary misses", async () => {
+    const ids = ["missing\0id", "missing\uD800id", "missing\uDC00id"];
+    for (const id of ids) {
+      await expect(api.categories.products({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(api.products.byId({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(api.vendors.byId({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(api.products.list({ q: id })).resolves.toEqual([]);
+      await expect(api.products.list({ category: id })).resolves.toEqual([]);
+    }
 
-    const cart = { items: [{ offerId: id, quantity: 1 }], voucherCode: "missing\0voucher" };
-    await expect(api.cart.validate(cart)).resolves.toEqual(validateCart(cart, dataset));
+    const offer = dataset.products.flatMap(({ variants }) => variants.flatMap(({ offers }) => offers))
+      .find(({ stock }) => stock !== "NO")!;
+    const items = [...ids, offer.id].map((offerId) => ({ offerId, quantity: 1 }));
+    for (const voucherCode of ["missing\0voucher", "missing\uD800voucher"]) {
+      const cart = { items, voucherCode };
+      await expect(api.cart.validate(cart)).resolves.toEqual(validateCart(cart, dataset));
+    }
   });
 
   it("looks up a literal empty category ID without changing optional list filtering", async () => {
     const fixture = structuredClone(dataset);
     fixture.categories.push({ id: "", name: "Empty ID", description: "" });
     fixture.products[0].categoryId = "";
+    fixture.products[0].tags.push("T3 📚");
     try {
       await seedCatalog(db, fixture);
       await expect(api.categories.products({ id: "" })).resolves.toEqual([fixture.products[0]]);
       await expect(api.products.list({ category: "" })).resolves.toEqual(fixture.products);
+      await expect(api.products.list({ q: "📚" })).resolves.toEqual([fixture.products[0]]);
     } finally {
       await seedCatalog(db, dataset);
     }
