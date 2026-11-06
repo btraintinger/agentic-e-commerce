@@ -1,3 +1,8 @@
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { generateDataset } from "../scripts/generate-data.mjs";
 import { parseDataset, readDataset } from "../src/dataset.js";
@@ -66,6 +71,30 @@ describe("generated JKU catalog", () => {
     first.products[0].attributes.mutated = true;
     first.products[0].variants[0].attributes.mutated = true;
     expect(generateDataset()).toStrictEqual(snapshot);
+  });
+
+  it("requires an explicit export path and preserves the historical fixture", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "jku-export-"));
+    const generator = fileURLToPath(new URL("../scripts/generate-data.mjs", import.meta.url));
+    const fixture = join(cwd, "data", "dataset.json");
+    const historical = '{"snapshot":"historical"}';
+    try {
+      mkdirSync(join(cwd, "data"));
+      writeFileSync(fixture, historical);
+
+      const missingPath = spawnSync(process.execPath, [generator], { cwd, encoding: "utf8" });
+      expect(missingPath.status).toBe(1);
+      expect(missingPath.stderr).toContain("Usage: node scripts/generate-data.mjs <output-path>");
+      expect(readFileSync(fixture, "utf-8")).toBe(historical);
+
+      const output = join(cwd, "generated.json");
+      const explicitPath = spawnSync(process.execPath, [generator, output], { cwd, encoding: "utf8" });
+      expect(explicitPath.status).toBe(0);
+      expect(readFileSync(output, "utf-8")).toBe(JSON.stringify(generateDataset(), null, 2));
+      expect(readFileSync(fixture, "utf-8")).toBe(historical);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
   });
 
   it("preserves the curated catalog and zero-cent student licenses", () => {

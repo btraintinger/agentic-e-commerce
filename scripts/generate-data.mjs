@@ -620,9 +620,16 @@ function addStarterSetTags(products) {
 }
 
 function main() {
+  const outputPath = process.argv[2];
+  if (!outputPath) {
+    console.error("Usage: node scripts/generate-data.mjs <output-path>");
+    process.exitCode = 1;
+    return;
+  }
+
   const dataset = generateDataset();
   const { products } = dataset;
-  writeFileSync(process.argv[2] ?? "data/dataset.json", JSON.stringify(dataset, null, 2));
+  writeFileSync(outputPath, JSON.stringify(dataset, null, 2));
 
   let variantCount = 0;
   let offerCount = 0;
