@@ -1,0 +1,45 @@
+.desk {
+  --background: #f4f4eb;
+  --foreground: #192d23;
+  --card: #fdfdf7;
+  --card-foreground: var(--foreground);
+  --primary: #254736;
+  --primary-foreground: #fbfcf4;
+  --secondary: #e6ebdf;
+  --secondary-foreground: var(--foreground);
+  --muted: #e6ebdf;
+  --muted-foreground: #506358;
+  --accent: #e8eadc;
+  --accent-foreground: var(--foreground);
+  --border: #cdd6c8;
+  --input: #899c8d;
+  --ring: #90502e;
+  --destructive: #9a382c;
+  --radius: 0.75rem;
+  --desk-mark: #f2b577;
+}
+
+.desk ::selection {
+  background: var(--desk-mark);
+  color: var(--foreground);
+}
+
+.desk textarea {
+  caret-color: var(--primary);
+}
+
+.desk [data-slot="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
+.desk,
+.desk * {
+  scrollbar-color: var(--input) transparent;
+}
+
+@media (forced-colors: active) {
+  .desk,
+  .desk * {
+    scrollbar-color: auto;
+  }
+}

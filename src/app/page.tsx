@@ -43,6 +43,12 @@ export default async function Home() {
               </div>
             </Link>
           </div>
+          <Link
+            href="/shop"
+            className="rounded-full bg-white/10 px-8 py-3 font-semibold no-underline transition hover:bg-white/20"
+          >
+            Open the shopping assistant →
+          </Link>
           <div className="flex flex-col items-center gap-2">
             <p className="text-2xl text-white">
               {hello ? hello.greeting : "Loading tRPC query..."}

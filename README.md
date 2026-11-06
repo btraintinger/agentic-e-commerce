@@ -46,6 +46,17 @@ The pinned Auth.js Drizzle adapter has a pnpm patch that exposes its PostgreSQL
 implementation with Drizzle v1 types. Remove the patch when upgrading to an
 adapter release that supports Drizzle v1.
 
+## Browser shopping assistant
+
+Open [the shopping assistant](http://localhost:3000/shop) in a browser with
+WebGPU enabled. Use localhost during development or HTTPS when hosting the app.
+The first run downloads a quantized Qwen3 1.7B model and caches it in the
+browser. The Vercel AI SDK runs the agent on your device using
+`@browser-ai/web-llm`, with no AI API key. Product and offer results appear
+as selectable cards, and the assistant can ask questions with quick replies.
+When it uses a webshop tool, that tool's arguments go to the app's tRPC API
+to look up live catalog data or check a cart.
+
 ## Webshop procedures
 
 | Procedure | Operation | Result |
