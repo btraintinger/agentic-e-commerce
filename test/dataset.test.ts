@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,13 +8,24 @@ import { generateDataset } from "../scripts/generate-data.mjs";
 import { parseDataset, readDataset } from "../src/dataset.js";
 
 describe("dataset", () => {
-  const dataset = readDataset();
+  const dataset = parseDataset(generateDataset());
 
-  it("loads the default dataset without errors", () => {
-    expect(dataset.categories.length).toBeGreaterThan(0);
-    expect(dataset.products.length).toBeGreaterThan(0);
-    expect(dataset.vendors.length).toBeGreaterThan(0);
-    expect(dataset.warehouses.length).toBeGreaterThan(0);
+  it("includes the curated JKU catalog", () => {
+    expect(dataset.categories.map(({ name }) => name)).toEqual([
+      "Electronics & Gadgets",
+      "Textbooks & Stationery",
+      "JKU Merchandise & Apparel",
+      "Campus Clothing",
+      "Software & Subscriptions",
+      "Campus Accessories",
+    ]);
+    expect(dataset.products).toHaveLength(201);
+    expect(dataset.vendors).toHaveLength(5);
+    expect(dataset.vendors.map(({ name }) => name)).toContain("JKU Campus Shop");
+    expect(dataset.warehouses.map(({ country }) => country)).toEqual(["AT", "AT", "DE", "NL"]);
+    expect(dataset.vouchers.map(({ code }) => code)).toEqual(expect.arrayContaining([
+      "WELCOME10", "STUDENT20", "FLAT500", "MINORDER3000", "EXPIRED2024",
+    ]));
   });
 
   it("has valid referential integrity", () => {
@@ -73,39 +84,31 @@ describe("generated JKU catalog", () => {
     expect(generateDataset()).toStrictEqual(snapshot);
   });
 
-  it("requires an explicit export path and preserves the historical fixture", () => {
+  it("requires an explicit export path and can read back a JSON export", () => {
     const cwd = mkdtempSync(join(tmpdir(), "jku-export-"));
     const generator = fileURLToPath(new URL("../scripts/generate-data.mjs", import.meta.url));
-    const fixture = join(cwd, "data", "dataset.json");
-    const historical = '{"snapshot":"historical"}';
+    const dataDir = join(cwd, "data");
     try {
-      mkdirSync(join(cwd, "data"));
-      writeFileSync(fixture, historical);
+      mkdirSync(dataDir);
 
       const missingPath = spawnSync(process.execPath, [generator], { cwd, encoding: "utf8" });
       expect(missingPath.status).toBe(1);
       expect(missingPath.stderr).toContain("Usage: node scripts/generate-data.mjs <output-path>");
-      expect(readFileSync(fixture, "utf-8")).toBe(historical);
+      expect(readdirSync(dataDir)).toEqual([]);
 
       const output = join(cwd, "generated.json");
       const explicitPath = spawnSync(process.execPath, [generator, output], { cwd, encoding: "utf8" });
       expect(explicitPath.status).toBe(0);
       expect(readFileSync(output, "utf-8")).toBe(JSON.stringify(generateDataset(), null, 2));
-      expect(readFileSync(fixture, "utf-8")).toBe(historical);
+      expect(readDataset(output)).toEqual(parseDataset(generateDataset()));
+      expect(readdirSync(dataDir)).toEqual([]);
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
   });
 
-  it("preserves the curated catalog and zero-cent student licenses", () => {
+  it("keeps the starter-set tag and zero-cent student licenses", () => {
     const generated = parseDataset(generateDataset());
-    const historical = readDataset("data/dataset.json");
-
-    expect(generated.categories).toEqual(historical.categories);
-    expect(generated.vendors).toEqual(historical.vendors);
-    expect(generated.warehouses).toEqual(historical.warehouses);
-    expect(generated.vouchers).toEqual(historical.vouchers);
-    expect(generated.products).toHaveLength(historical.products.length);
     expect(generated.products.find(({ name }) => name === "ThinkPad X1 Carbon Student Edition")?.tags)
       .toContain("starter-set");
 

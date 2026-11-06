@@ -28,10 +28,8 @@ The generator uses the same curated product definitions, variants, and offer
 rules as the JSON export. To write a separate copy, run
 `node scripts/generate-data.mjs /tmp/jku-catalog.json`.
 
-To import the exact historical catalog, run
-`DATASET_PATH=data/dataset.json pnpm db:seed`. Generated IDs and randomized
-values can differ from that snapshot. Set `DATASET_PATH` to another file to
-import a custom JSON fixture.
+To import your own catalog JSON, run
+`DATASET_PATH=/path/to/catalog.json pnpm db:seed`.
 
 Both modes replace the webshop catalog and vouchers in one transaction on
 every run. Auth.js and starter post data stay intact.
@@ -83,7 +81,7 @@ pnpm build
 ```
 
 The PostgreSQL integration suite uses a dedicated, disposable database. It
-checks API behavior with the historical fixture and the fixed-seed catalog.
+checks API behavior with the fixed-seed catalog.
 Create the database once and opt in by setting its URL:
 
 ```sh

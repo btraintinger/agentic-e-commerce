@@ -42,7 +42,7 @@ src/types.ts             # domain and cart types
 src/dataset.ts           # Zod fixture schema and seed reader
 src/validate.ts          # pure cart validation logic
 drizzle/                 # committed Drizzle migrations
-data/dataset.json        # historical curated catalog fixture
+scripts/generate-data.mjs # fixed-seed JKU catalog generator
 client/demo.ts           # typed tRPC CLI demo
 test/                    # Vitest suites
 ```
@@ -100,8 +100,8 @@ Voucher records stay server-side. Clients can submit a code to `cart.validate`.
 - Use the shared generator in `scripts/generate-data.mjs` for fixed-seed
   catalog generation and JSON exports. Seed only webshop tables and keep
   Auth.js and starter post data intact.
-- Preserve the historical fixture in `data/dataset.json`. Pass an output path
-  to `node scripts/generate-data.mjs` when exporting a separate copy.
+- Keep generated catalog data out of source control. Pass an explicit output
+  path to `node scripts/generate-data.mjs` when exporting JSON.
 - Curated "JKU Starter Set" products are tagged `starter-set`.
 
 ## Build & verify

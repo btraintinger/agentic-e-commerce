@@ -1,13 +1,10 @@
 import type { StockLevel } from "../src/types.js";
-import { describe, it, expect, beforeAll } from "vitest";
-import { readDataset } from "../src/dataset.js";
+import { describe, it, expect } from "vitest";
+import { generateDataset } from "../scripts/generate-data.mjs";
+import { parseDataset } from "../src/dataset.js";
 import { validateCart } from "../src/validate.js";
 
-let dataset: ReturnType<typeof readDataset>;
-
-beforeAll(() => {
-  dataset = readDataset();
-});
+const dataset = parseDataset(generateDataset());
 
 interface OfferInfo {
   offerId: string;
@@ -65,7 +62,7 @@ function findOfferWithStockZero(): OfferInfo | null {
 
 describe("validateCart", () => {
   it("happy path: valid items", () => {
-    const offer = findOffer((o) => o.stock === "ALOT" && o.shippingCost === 0);
+    const offer = findOffer((o) => o.stock === "ALOT" && o.shippingCost === 0 && o.price > 0);
     expect(offer).not.toBeNull();
     const result = validateCart({
       items: [{ offerId: offer!.offerId, quantity: 2 }],
@@ -226,7 +223,7 @@ describe("validateCart", () => {
   });
 
   it("voucher percent: applies percent discount correctly", () => {
-    const offer = findOffer((o) => o.stock === "ALOT" && o.shippingCost === 0);
+    const offer = findOffer((o) => o.stock === "ALOT" && o.shippingCost === 0 && o.price > 0);
     expect(offer).not.toBeNull();
     const result = validateCart({
       items: [{ offerId: offer!.offerId, quantity: 1 }],

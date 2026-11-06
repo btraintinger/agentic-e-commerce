@@ -85,8 +85,7 @@ export function parseDataset(input: unknown): Dataset {
   return result.data;
 }
 
-export function readDataset(path?: string): Dataset {
-  const resolvedPath = path ?? process.env.DATASET_PATH ?? "data/dataset.json";
-  const raw = readFileSync(resolvedPath, "utf-8");
+export function readDataset(path: string): Dataset {
+  const raw = readFileSync(path, "utf-8");
   return parseDataset(JSON.parse(raw));
 }

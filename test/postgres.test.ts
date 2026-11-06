@@ -5,7 +5,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { generateDataset } from "../scripts/generate-data.mjs";
-import { parseDataset, readDataset } from "~/dataset";
+import { parseDataset } from "~/dataset";
 import { createCaller } from "~/server/api/root";
 import * as schema from "~/server/db/schema";
 import { seedCatalog } from "~/server/db/seed-catalog";
@@ -22,7 +22,7 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
     getSession: async () => null,
     rateLimitKey: "postgres-test",
   });
-  const dataset = readDataset("data/dataset.json");
+  const dataset = parseDataset(generateDataset());
 
   beforeAll(async () => {
     await migrate(db, { migrationsFolder: "drizzle" });
