@@ -85,7 +85,7 @@ export function ShoppingToolResult({
         </CardHeader>
         {products.length > 0 && (
           <CardContent>
-            <ul className="divide-y divide-border border-y">
+            <ul className="divide-y divide-border border-y border-border">
               {products.map((product) => (
                 <li
                   key={product.id}
@@ -138,7 +138,7 @@ export function ShoppingToolResult({
         </CardHeader>
         {offers.length > 0 && (
           <CardContent>
-            <ul className="divide-y divide-border border-y">
+            <ul className="divide-y divide-border border-y border-border">
               {offers.map((offer) => (
                 <li key={offer.id} className="flex flex-wrap justify-between gap-x-4 gap-y-2 py-3">
                   <div className="min-w-0">
@@ -217,8 +217,8 @@ export function ShoppingToolResult({
             <dd className="text-right">{price(totals.shipping)}</dd>
             <dt>Discount</dt>
             <dd className="text-right">{price(totals.discount)}</dd>
-            <dt className="border-t pt-1 font-semibold">Total</dt>
-            <dd className="border-t pt-1 text-right font-semibold">{price(totals.grand)}</dd>
+            <dt className="border-t border-border pt-1 font-semibold">Total</dt>
+            <dd className="border-t border-border pt-1 text-right font-semibold">{price(totals.grand)}</dd>
           </dl>
           {issues.length > 0 && (
             <ul className="ml-4 list-disc text-sm text-destructive">
