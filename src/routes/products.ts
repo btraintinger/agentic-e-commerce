@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { getDataset, getProductById } from "../dataset.js";
+import { matchesProductSearch } from "../product-search.js";
 
 export default async function (server: FastifyInstance): Promise<void> {
   server.get<{ Querystring: { category?: string; q?: string; minPrice?: string; maxPrice?: string } }>("/products", {
@@ -31,12 +32,7 @@ export default async function (server: FastifyInstance): Promise<void> {
 
     if (q) {
       const lowerQ = q.toLowerCase();
-      products = products.filter(p =>
-        p.name.toLowerCase().includes(lowerQ) ||
-        p.description.toLowerCase().includes(lowerQ) ||
-        (p.brand ?? "").toLowerCase().includes(lowerQ) ||
-        p.tags.some(t => t.toLowerCase().includes(lowerQ))
-      );
+      products = products.filter(p => matchesProductSearch(p, lowerQ));
     }
 
     if (minPrice !== undefined || maxPrice !== undefined) {

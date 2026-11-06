@@ -1,5 +1,6 @@
-import { and, asc, eq, inArray, or, sql, type SQL, type SQLWrapper } from "drizzle-orm";
+import { and, asc, eq, inArray, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 
+import { matchesProductSearch } from "~/product-search";
 import type { Offer, Product, ValidateRequest, Warehouse } from "~/types";
 import { validateCart } from "~/validate";
 import type { db } from "./index";
@@ -90,23 +91,19 @@ export function listCategoryProducts(database: Database, id: string) {
 
 export async function listProducts(reader: Reader, { category, q, minPrice, maxPrice }: ProductFilters): Promise<Product[]> {
   if ((category && isUnrepresentableText(category)) || (q && isUnrepresentableText(q))) return [];
-  const search = q?.toLowerCase();
-  const textMatch = search ? or(
-    sql`strpos(lower(${products.name}), ${search}) > 0`,
-    sql`strpos(lower(${products.description}), ${search}) > 0`,
-    sql`strpos(lower(${products.brand}), ${search}) > 0`,
-    sql`exists (select 1 from unnest(${products.tags}) as tag where strpos(lower(tag), ${search}) > 0)`,
-  ) : undefined;
   const priceMatch = and(
     minPrice === undefined ? undefined : sql`${offers.price} >= ${minPrice}::numeric`,
     maxPrice === undefined ? undefined : sql`${offers.price} <= ${maxPrice}::numeric`,
   );
 
-  return productsWithVariants(reader, and(
+  const matchingProducts = await productsWithVariants(reader, and(
     category ? eq(products.categoryId, category) : undefined,
-    textMatch,
     priceMatch ? hasOffer(reader, priceMatch) : undefined,
   ));
+  const lowerQuery = q?.toLowerCase();
+  return lowerQuery
+    ? matchingProducts.filter((product) => matchesProductSearch(product, lowerQuery))
+    : matchingProducts;
 }
 
 export async function findProduct(reader: Reader, id: string) {

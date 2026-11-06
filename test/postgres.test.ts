@@ -137,6 +137,18 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
     }
   });
 
+  it("preserves JavaScript lowercase matching for international product text", async () => {
+    const fixture = structuredClone(dataset);
+    fixture.products[0].name = "International İZMİR";
+    try {
+      await seedCatalog(db, fixture);
+      await expect(api.products.list({ q: "international İZMİR" })).resolves.toEqual([fixture.products[0]]);
+      await expect(api.products.list({ q: "international izmir" })).resolves.toEqual([]);
+    } finally {
+      await seedCatalog(db, dataset);
+    }
+  });
+
   it("rolls back replacement if the selected fixture contains a broken reference", async () => {
     const broken = structuredClone(dataset);
     broken.products[0].categoryId = "missing";
