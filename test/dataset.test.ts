@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { loadDataset } from "../src/dataset.js";
+import { readDataset } from "../src/dataset.js";
 
 describe("dataset", () => {
-  const dataset = loadDataset();
+  const dataset = readDataset();
 
   it("loads the default dataset without errors", () => {
     expect(dataset.categories.length).toBeGreaterThan(0);

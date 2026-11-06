@@ -1,16 +1,6 @@
 import { readFileSync } from "node:fs";
 import { z } from "zod";
-import type {
-  Category,
-  Product,
-  Variant,
-  Offer,
-  Vendor,
-  Warehouse,
-  Voucher,
-  Dataset,
-  StockLevel,
-} from "./types.js";
+import type { Dataset } from "./types.js";
 
 const deliveryDaysSchema = z.object({
   min: z.number().int().min(0),
@@ -85,37 +75,6 @@ const datasetSchema = z.object({
   vouchers: z.array(voucherSchema),
 });
 
-export { datasetSchema };
-
-let cachedDataset: Dataset | null = null;
-let categoryById: Map<string, Category> = new Map();
-let productById: Map<string, Product> = new Map();
-let vendorById: Map<string, Vendor> = new Map();
-let warehouseById: Map<string, Warehouse> = new Map();
-let offerById: Map<string, Offer & { variantId: string; productId: string }> = new Map();
-let voucherByCode: Map<string, Voucher> = new Map();
-
-function buildIndexes(data: Dataset): void {
-  categoryById = new Map(data.categories.map((c) => [c.id, c]));
-  productById = new Map(data.products.map((p) => [p.id, p]));
-  vendorById = new Map(data.vendors.map((v) => [v.id, v]));
-  warehouseById = new Map(data.warehouses.map((w) => [w.id, w]));
-  voucherByCode = new Map(data.vouchers.map((v) => [v.code, v]));
-
-  offerById = new Map();
-  for (const product of data.products) {
-    for (const variant of product.variants) {
-      for (const offer of variant.offers) {
-        offerById.set(offer.id, {
-          ...offer,
-          variantId: variant.id,
-          productId: product.id,
-        });
-      }
-    }
-  }
-}
-
 export function readDataset(path?: string): Dataset {
   const resolvedPath = path ?? process.env.DATASET_PATH ?? "data/dataset.json";
   const raw = readFileSync(resolvedPath, "utf-8");
@@ -127,51 +86,4 @@ export function readDataset(path?: string): Dataset {
     );
   }
   return result.data;
-}
-
-export function loadDataset(path?: string): Dataset {
-  const data = readDataset(path);
-  buildIndexes(data);
-  cachedDataset = data;
-  return data;
-}
-
-export function getDataset(): Dataset {
-  if (!cachedDataset) {
-    return loadDataset();
-  }
-  return cachedDataset;
-}
-
-export function getCategoryById(): ReadonlyMap<string, Category> {
-  if (!cachedDataset) loadDataset();
-  return categoryById;
-}
-
-export function getProductById(): ReadonlyMap<string, Product> {
-  if (!cachedDataset) loadDataset();
-  return productById;
-}
-
-export function getVendorById(): ReadonlyMap<string, Vendor> {
-  if (!cachedDataset) loadDataset();
-  return vendorById;
-}
-
-export function getWarehouseById(): ReadonlyMap<string, Warehouse> {
-  if (!cachedDataset) loadDataset();
-  return warehouseById;
-}
-
-export function getOfferById(): ReadonlyMap<
-  string,
-  Offer & { variantId: string; productId: string }
-> {
-  if (!cachedDataset) loadDataset();
-  return offerById;
-}
-
-export function getVoucherByCode(): ReadonlyMap<string, Voucher> {
-  if (!cachedDataset) loadDataset();
-  return voucherByCode;
 }

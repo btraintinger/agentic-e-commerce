@@ -3,8 +3,7 @@
 **Rules only, no decisions:** This file contains rules only — instructions that apply to any work in this repo. Durable decisions, rationale, measurements and history do not belong here but in `docs/`/`features/` (or the project docs); open work goes to `Agents.todo.md`, settled matters to git history.
 
 See `README.md` for project context. The tRPC contract is `AppRouter` in
-`src/server/api/root.ts`. Domain types live in `src/types.ts`. The legacy REST
-contract is the generated, committed `openapi.yaml`.
+`src/server/api/root.ts`. Domain types live in `src/types.ts`.
 
 ## Stack
 
@@ -28,11 +27,9 @@ contract is the generated, committed `openapi.yaml`.
 | `pnpm typecheck` | Run `tsc --noEmit` |
 | `pnpm test` | Run Vitest |
 | `pnpm client` | Run the typed CLI demo against the app |
-| `pnpm dev:legacy` | Start the legacy REST service with watch mode |
-| `pnpm openapi` | Generate or refresh the legacy REST contract |
 
-Use `DATABASE_URL` for Postgres. `DATASET_PATH` selects the seed or legacy
-service fixture and defaults to `data/dataset.json`. Use a disposable
+Use `DATABASE_URL` for Postgres. `DATASET_PATH` selects the seed fixture and
+defaults to `data/dataset.json`. Use a disposable
 `TEST_DATABASE_URL` for the PostgreSQL integration suite.
 
 ## Project structure
@@ -43,41 +40,34 @@ src/server/api/          # tRPC context and routers
 src/server/auth/         # Auth.js setup
 src/server/db/           # Drizzle schema, catalog queries, seed transaction
 src/types.ts             # domain and cart types
-src/dataset.ts           # Zod fixture schema and legacy loader
+src/dataset.ts           # Zod fixture schema and seed reader
 src/validate.ts          # pure cart validation logic
-src/server.ts            # legacy REST server factory
-src/routes/              # legacy REST route plugins
 drizzle/                 # committed Drizzle migrations
 data/dataset.json        # generated default catalog fixture
 client/demo.ts           # typed tRPC CLI demo
 test/                    # Vitest suites
-openapi.yaml             # committed legacy REST contract
 ```
 
-## API contracts
+## API contract
 
-The tRPC router exposes `health`, `categories.list`, `categories.products`,
-`products.list`, `products.byId`, `vendors.list`, `vendors.byId`,
-`warehouses.list`, and `cart.validate`. Only `cart.validate` is a mutation.
-Apply the cart validation rate limit per operation, including inside batches.
-Preserve the existing catalog and cart response shapes.
+Serve the webshop procedures through tRPC at `/api/trpc`.
 
-Preserve these legacy REST routes and response shapes.
+- `health` returns `{ status: "ok" }`.
+- `categories.list` returns `Category[]`. `categories.products` takes `{ id }`
+  and returns `Product[]`, or `NOT_FOUND` for an unknown category.
+- `products.list` takes optional `{ category, q, minPrice, maxPrice }` and
+  returns `Product[]`. Match `q` as a case-insensitive literal substring of
+  name, description, brand, or any tag. Both price bounds are in cents and
+  must match the same offer.
+- `products.byId` and `vendors.byId` take `{ id }` and return the matching
+  `Product` or `Vendor`, or `NOT_FOUND` for an unknown ID.
+- `vendors.list` returns `Vendor[]`. `warehouses.list` returns `Warehouse[]`
+  including public warehouse IDs.
+- `cart.validate` is the only webshop mutation. It returns `ValidateResponse`.
+  Limit it to five attempts per minute per client IP, counting each operation
+  in a batch, and return `TOO_MANY_REQUESTS` when the limit is exceeded.
 
-- `GET /health` → `{ status: "ok" }`
-- `GET /categories` → `Category[]`
-- `GET /categories/:id/products` → `Product[]` (404 if category unknown)
-- `GET /products?category=&q=&minPrice=&maxPrice=` → `Product[]`
-  (`q` matches name/description/brand/tags, case-insensitive; price filters in
-  cents, match if **any** offer price is in range)
-- `GET /products/:id` → `Product` (404 if unknown)
-- `GET /vendors` → `Vendor[]`, `GET /vendors/:id` → `Vendor` (404)
-- `GET /warehouses` → `Warehouse[]` (warehouse UUIDs are public)
-- `POST /validate` → `ValidateResponse` (rate-limited 5/min/IP → 429)
-- All error bodies: `{ statusCode, error, message }` (fastify default shape).
-
-Vouchers are **never exposed via the API** (no list/detail endpoint); the only way
-to test a code is cart validation. Type shapes are defined in `src/types.ts`.
+Voucher records stay server-side. Clients can submit a code to `cart.validate`.
 
 ## Cart validation semantics
 
@@ -127,8 +117,6 @@ to test a code is cart validation. Type shapes are defined in `src/types.ts`.
 - **Conventional Commits** (`feat:`, `fix:`, `test:`, `docs:`, `chore:`)
 - No comments in code unless necessary; strict TS, no `any`
 - Keep `src/validate.ts` pure (data in → result out) so it is unit-testable
-- Test tRPC with its caller or Fetch adapter. Test legacy REST with Fastify
-  injection. HTTP API tests do not bind a live port.
+- Test tRPC with its caller or Fetch adapter. HTTP API tests do not bind a live port.
 - After changes always run: `pnpm typecheck && pnpm test`
-- When the legacy REST API shape changes, regenerate `openapi.yaml` with
-  `pnpm openapi` and commit it. Commit generated Drizzle migrations with schema changes.
+- Commit generated Drizzle migrations with schema changes.

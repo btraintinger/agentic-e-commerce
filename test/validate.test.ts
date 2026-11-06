@@ -1,12 +1,12 @@
 import type { StockLevel } from "../src/types.js";
 import { describe, it, expect, beforeAll } from "vitest";
-import { loadDataset } from "../src/dataset.js";
+import { readDataset } from "../src/dataset.js";
 import { validateCart } from "../src/validate.js";
 
-let dataset: ReturnType<typeof loadDataset>;
+let dataset: ReturnType<typeof readDataset>;
 
 beforeAll(() => {
-  dataset = loadDataset();
+  dataset = readDataset();
 });
 
 interface OfferInfo {

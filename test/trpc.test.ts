@@ -15,6 +15,20 @@ const url = "http://localhost/api/trpc";
 
 afterAll(() => connection.end());
 
+function handleRequest(req: Request, rateLimitKey: string) {
+  return fetchRequestHandler({
+    endpoint: "/api/trpc",
+    req,
+    router: appRouter,
+    createContext: () => ({
+      db,
+      headers: req.headers,
+      getSession: async () => null,
+      rateLimitKey,
+    }),
+  });
+}
+
 function client(ip: string, batch = false) {
   const link = batch ? httpBatchLink : httpLink;
   const statuses: number[] = [];
@@ -23,18 +37,7 @@ function client(ip: string, batch = false) {
       url,
       transformer: superjson,
       fetch: async (input, init) => {
-        const req = new Request(input, init);
-        const response = await fetchRequestHandler({
-          endpoint: "/api/trpc",
-          req,
-          router: appRouter,
-          createContext: () => ({
-            db,
-            headers: req.headers,
-            getSession: async () => null,
-            rateLimitKey: ip,
-          }),
-        });
+        const response = await handleRequest(new Request(input, init), ip);
         statuses.push(response.status);
         return response;
       },
@@ -48,6 +51,22 @@ describe("webshop tRPC HTTP contract", () => {
     const { api, statuses } = client("192.0.2.1");
     await expect(api.health.query()).resolves.toEqual({ status: "ok" });
     expect(statuses).toEqual([200]);
+  });
+
+  it("keeps voucher list and detail procedures private", async () => {
+    for (const procedure of ["vouchers.list", "vouchers.byId"]) {
+      const response = await handleRequest(new Request(`${url}/${procedure}`), "192.0.2.6");
+      expect(response.status).toBe(404);
+    }
+  });
+
+  it.each([{}, { items: "not-array" }])("rejects malformed cart input %j", async (input) => {
+    const response = await handleRequest(new Request(`${url}/cart.validate`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(superjson.serialize(input)),
+    }), "192.0.2.7");
+    expect(response.status).toBe(400);
   });
 
   it("limits cart validation per client and leaves queries unrestricted", async () => {

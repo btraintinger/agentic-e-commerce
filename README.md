@@ -68,14 +68,6 @@ restrict network access so clients can only reach the proxy. The proxy must
 overwrite `X-Forwarded-For` with a single client IP. Set `TRUST_PROXY=true`
 for that deployment.
 
-## Legacy REST compatibility
-
-Existing REST clients can use the transitional Fastify service and the committed
-`openapi.yaml` contract. Run `PORT=3001 pnpm dev:legacy` alongside Next.js, or run
-`pnpm dev:legacy` on its original port 3000 when Next.js is stopped. Swagger UI is
-available at `/docs`. The legacy service reads the JSON fixture at startup and
-supports `DATASET_PATH`.
-
 ## Checks
 
 ```sh
@@ -92,7 +84,7 @@ TEST_DATABASE_URL=postgresql://webshop:webshop@127.0.0.1:5433/webshop_test pnpm 
 ```
 
 Use `pnpm db:generate` after editing the Drizzle schema and commit the generated
-migration. Run `pnpm openapi` after changes to the legacy REST contract.
+migration.
 
 ## License
 
