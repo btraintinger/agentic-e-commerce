@@ -44,6 +44,7 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "~/components/ui/message-scroller";
+import { Separator } from "~/components/ui/separator";
 import {
   createShoppingTransport,
   type ShoppingMessage,
@@ -130,26 +131,26 @@ export function ShoppingAssistant() {
 
   return (
     <main className={styles.desk + " min-h-dvh bg-background text-foreground"}>
-      <header className="border-b border-primary bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-[75rem] flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-8">
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-[75rem] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 sm:px-8">
           <Link
             href="/"
-            className="inline-flex min-h-10 items-center gap-2.5 rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
           >
-            <ShoppingBag aria-hidden className="size-5 text-(--desk-mark)" />
+            <ShoppingBag aria-hidden className="size-5 text-primary" />
             JKU Webshop
           </Link>
-          <span className="text-sm font-medium">Shopping assistant</span>
+          <span className="text-sm text-muted-foreground">Shopping assistant</span>
         </div>
       </header>
 
       <div className="mx-auto grid max-w-[75rem] gap-6 px-4 py-5 sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-8">
         <section
           aria-labelledby="shop-title"
-          className="flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card text-card-foreground"
+          className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground"
         >
-          <div className="border-b px-5 py-4 sm:px-8">
-            <h1 id="shop-title" className="text-xl font-semibold tracking-tight">
+          <div className="border-b border-border px-5 py-4 sm:px-8">
+            <h1 id="shop-title" className="text-base font-semibold">
               Campus shopping desk
             </h1>
           </div>
@@ -159,33 +160,36 @@ export function ShoppingAssistant() {
               <MessageScrollerViewport className="h-full" aria-label="Conversation">
                 <MessageScrollerContent aria-live="off" className="gap-6 px-5 py-6 sm:px-8 sm:py-8">
                   {messages.length === 0 ? (
-                    <MessageScrollerItem>
-                      <div className="flex max-w-xl flex-col gap-6">
+                    <MessageScrollerItem className="my-auto">
+                      <div className="flex flex-col gap-6">
                         <div>
-                          <h2 className="max-w-[18ch] text-balance text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+                          <h2 className="text-balance text-3xl leading-tight font-semibold tracking-tight">
                             What are you shopping for?
                           </h2>
-                          <p className="mt-3 max-w-[44ch] text-sm leading-relaxed text-muted-foreground sm:text-base">
+                          <p className="mt-2 max-w-[48ch] text-sm leading-relaxed text-muted-foreground">
                             Tell me what you need or how much you want to spend.
                             I’ll look through the JKU catalog for you.
                           </p>
                         </div>
-                        <div className="flex flex-col items-start gap-2" role="group" aria-label="Example requests">
+                        <div className="flex flex-col items-start gap-3">
                           <p className="text-xs text-muted-foreground">
                             Your first message starts a large model download.
                           </p>
-                          {startingPoints.map(({ label, prompt }) => (
-                            <Button
-                              key={label}
-                              variant="outline"
-                              className="min-h-10 max-w-full justify-start"
-                              disabled={!canSend}
-                              onClick={() => ask(prompt)}
-                            >
-                              <ArrowDownRight aria-hidden data-icon="inline-start" />
-                              {label}
-                            </Button>
-                          ))}
+                          <div className="flex flex-wrap gap-2" role="group" aria-label="Example requests">
+                            {startingPoints.map(({ label, prompt }) => (
+                              <Button
+                                key={label}
+                                variant="outline"
+                                size="sm"
+                                className="min-h-9 max-w-full"
+                                disabled={!canSend}
+                                onClick={() => ask(prompt)}
+                              >
+                                <ArrowDownRight aria-hidden data-icon="inline-start" />
+                                {label}
+                              </Button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </MessageScrollerItem>
@@ -220,7 +224,7 @@ export function ShoppingAssistant() {
                                     </p>
                                   );
                                   return message.role === "user" ? (
-                                    <Bubble key={index}>
+                                    <Bubble key={index} variant="tinted">
                                       <BubbleContent>{body}</BubbleContent>
                                     </Bubble>
                                   ) : (
@@ -257,7 +261,7 @@ export function ShoppingAssistant() {
             </MessageScroller>
           </MessageScrollerProvider>
 
-          <div className="flex flex-col gap-3 border-t px-5 py-4 sm:px-8">
+          <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:px-8">
             <span className="sr-only" role="status">{announcement}</span>
             {modelSupported === false && (
               <Alert variant="destructive">
@@ -355,11 +359,11 @@ export function ShoppingAssistant() {
           </div>
         </section>
 
-        <aside aria-labelledby="local-model-title" className="flex min-w-0 flex-col gap-5 self-start">
-          <section className="flex flex-col gap-3 border-y py-5">
+        <aside aria-labelledby="local-model-title" className="flex min-w-0 flex-col gap-4 self-start rounded-xl border border-border bg-card p-4 text-card-foreground">
+          <section className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <h2 id="local-model-title" className="flex items-center gap-2 text-sm font-semibold">
-                <Cpu aria-hidden className="size-4 text-muted-foreground" />
+                <Cpu aria-hidden className="size-4 text-primary" />
                 Local model
               </h2>
               <Badge variant="secondary">
@@ -384,7 +388,8 @@ export function ShoppingAssistant() {
               </div>
             )}
           </section>
-          <section className="flex flex-col gap-2 pb-5">
+          <Separator />
+          <section className="flex flex-col gap-2">
             <h2 className="flex items-center gap-2 text-sm font-semibold">
               <PackageSearch aria-hidden className="size-4 text-muted-foreground" />
               Catalog results
@@ -395,7 +400,7 @@ export function ShoppingAssistant() {
             </p>
             <Link
               href="/"
-              className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md text-sm font-medium text-primary underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="inline-flex min-h-9 w-fit items-center gap-2 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               Webshop home <ArrowRight aria-hidden className="size-4" />
             </Link>

@@ -1,27 +1,26 @@
 .desk {
-  --background: #f4f4eb;
-  --foreground: #192d23;
-  --card: #fdfdf7;
+  --background: #fafafa;
+  --foreground: #18181b;
+  --card: #ffffff;
   --card-foreground: var(--foreground);
-  --primary: #254736;
-  --primary-foreground: #fbfcf4;
-  --secondary: #e6ebdf;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
   --secondary-foreground: var(--foreground);
-  --muted: #e6ebdf;
-  --muted-foreground: #506358;
-  --accent: #e8eadc;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525b;
+  --accent: #eff6ff;
   --accent-foreground: var(--foreground);
-  --border: #cdd6c8;
-  --input: #899c8d;
-  --ring: #90502e;
-  --destructive: #9a382c;
+  --border: #e4e4e7;
+  --input: #8c8c97;
+  --ring: var(--primary);
+  --destructive: #b91c1c;
   --radius: 0.75rem;
-  --desk-mark: #f2b577;
 }
 
 .desk ::selection {
-  background: var(--desk-mark);
-  color: var(--foreground);
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .desk textarea {
