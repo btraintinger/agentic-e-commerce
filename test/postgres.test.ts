@@ -86,6 +86,48 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
     expect(await api.cart.validate(cart)).toEqual(validateCart(cart, dataset));
   });
 
+  it("handles a cart with more distinct offer IDs than repeated bind lists support", async () => {
+    const offer = dataset.products.flatMap(({ variants }) => variants.flatMap(({ offers }) => offers))
+      .find(({ stock }) => stock !== "NO")!;
+    const validItem = { offerId: offer.id, quantity: 1 };
+    const unknownItems = Array.from({ length: 22_000 }, (_, index) => ({
+      offerId: index.toString(36),
+      quantity: 1,
+    }));
+    const cart = { items: [...unknownItems, validItem] };
+    expect(Buffer.byteLength(JSON.stringify(cart))).toBeLessThan(1024 * 1024);
+
+    const result = await api.cart.validate(cart);
+    expect(result.issues).toHaveLength(unknownItems.length);
+    expect(result.issues.at(-1)).toMatchObject({ code: "OFFER_NOT_FOUND", offerId: unknownItems.at(-1)?.offerId });
+    expect(result.shipments).toEqual(validateCart({ items: [validItem] }, dataset).shipments);
+  });
+
+  it("handles NULs in catalog and cart input as ordinary misses", async () => {
+    const id = "missing\0id";
+    await expect(api.categories.products({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.products.byId({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.vendors.byId({ id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.products.list({ q: id })).resolves.toEqual([]);
+    await expect(api.products.list({ category: id })).resolves.toEqual([]);
+
+    const cart = { items: [{ offerId: id, quantity: 1 }], voucherCode: "missing\0voucher" };
+    await expect(api.cart.validate(cart)).resolves.toEqual(validateCart(cart, dataset));
+  });
+
+  it("looks up a literal empty category ID without changing optional list filtering", async () => {
+    const fixture = structuredClone(dataset);
+    fixture.categories.push({ id: "", name: "Empty ID", description: "" });
+    fixture.products[0].categoryId = "";
+    try {
+      await seedCatalog(db, fixture);
+      await expect(api.categories.products({ id: "" })).resolves.toEqual([fixture.products[0]]);
+      await expect(api.products.list({ category: "" })).resolves.toEqual(fixture.products);
+    } finally {
+      await seedCatalog(db, dataset);
+    }
+  });
+
   it("rolls back replacement if the selected fixture contains a broken reference", async () => {
     const broken = structuredClone(dataset);
     broken.products[0].categoryId = "missing";

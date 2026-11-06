@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, inArray, or, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 
 import type { Offer, Product, ValidateRequest, Warehouse } from "~/types";
 import { validateCart } from "~/validate";
@@ -14,6 +14,14 @@ type ProductFilters = {
   minPrice?: number;
   maxPrice?: number;
 };
+
+function containsNul(value: string) {
+  return value.includes("\0");
+}
+
+function inTextSet(column: SQLWrapper, values: string[]) {
+  return sql`${column} in (select jsonb_array_elements_text(${JSON.stringify(values)}::jsonb))`;
+}
 
 function toWarehouse({ position: _, packageTax, ...warehouse }: typeof warehouses.$inferSelect): Warehouse {
   return { ...warehouse, ...(packageTax === null ? {} : { packageTax }) };
@@ -69,17 +77,19 @@ export function listCategories(reader: Reader) {
 }
 
 export function listCategoryProducts(database: Database, id: string) {
+  if (containsNul(id)) return undefined;
   return database.transaction(async (tx) => {
     const category = await tx.query.categories.findFirst({
       where: eq(categories.id, id),
       columns: { id: true },
     });
     if (!category) return undefined;
-    return listProducts(tx, { category: id });
+    return productsWithVariants(tx, eq(products.categoryId, id));
   }, { isolationLevel: "repeatable read", accessMode: "read only" });
 }
 
-export function listProducts(reader: Reader, { category, q, minPrice, maxPrice }: ProductFilters) {
+export async function listProducts(reader: Reader, { category, q, minPrice, maxPrice }: ProductFilters): Promise<Product[]> {
+  if ((category && containsNul(category)) || (q && containsNul(q))) return [];
   const search = q?.toLowerCase();
   const textMatch = search ? or(
     sql`strpos(lower(${products.name}), ${search}) > 0`,
@@ -100,6 +110,7 @@ export function listProducts(reader: Reader, { category, q, minPrice, maxPrice }
 }
 
 export async function findProduct(reader: Reader, id: string) {
+  if (containsNul(id)) return undefined;
   const [product] = await productsWithVariants(reader, eq(products.id, id));
   return product;
 }
@@ -112,6 +123,7 @@ export function listVendors(reader: Reader) {
 }
 
 export function findVendor(reader: Reader, id: string) {
+  if (containsNul(id)) return undefined;
   return reader.query.vendors.findFirst({
     where: eq(vendors.id, id),
     columns: { position: false },
@@ -125,8 +137,9 @@ export async function listWarehouses(reader: Reader) {
 
 export async function validateCatalogCart(database: Database, input: ValidateRequest) {
   return database.transaction(async (tx) => {
-    const offerIds = [...new Set(input.items.map(({ offerId }) => offerId))];
-    const offerWhere = inArray(offers.id, offerIds);
+    const offerIds = [...new Set(input.items.map(({ offerId }) => offerId))]
+      .filter((id) => !containsNul(id));
+    const offerWhere = inTextSet(offers.id, offerIds);
     const cartProducts = offerIds.length
       ? await productsWithVariants(tx, hasOffer(tx, offerWhere), offerWhere)
       : [];
@@ -134,9 +147,9 @@ export async function validateCatalogCart(database: Database, input: ValidateReq
       variants.flatMap(({ offers }) => offers.map(({ warehouseId }) => warehouseId)),
     ))];
     const cartWarehouses = warehouseIds.length
-      ? await tx.query.warehouses.findMany({ where: inArray(warehouses.id, warehouseIds) })
+      ? await tx.query.warehouses.findMany({ where: inTextSet(warehouses.id, warehouseIds) })
       : [];
-    const voucher = input.voucherCode
+    const voucher = input.voucherCode && !containsNul(input.voucherCode)
       ? await tx.query.vouchers.findFirst({ where: eq(vouchers.code, input.voucherCode) })
       : undefined;
 

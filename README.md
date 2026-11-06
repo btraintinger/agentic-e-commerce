@@ -18,10 +18,10 @@ pnpm db:seed
 pnpm dev
 ```
 
-Next.js serves the starter at `http://localhost:3000` and tRPC at
-`http://localhost:3000/api/trpc`. The app runs on the host and connects to Docker
-Postgres at `127.0.0.1:5433`. The Compose volume retains the database when you
-stop the container.
+The development, start, and preview scripts bind Next.js to `127.0.0.1`. The
+starter is at `http://localhost:3000` and tRPC is at
+`http://localhost:3000/api/trpc`. The app connects to Docker Postgres at
+`127.0.0.1:5433`. The Compose volume retains the database when you stop the container.
 
 `pnpm db:seed` replaces the catalog and vouchers from `data/dataset.json` in one
 transaction. Rerun it after changing fixtures. Select another fixture with
@@ -61,10 +61,12 @@ insufficient stock. It applies voucher discounts to eligible items and adds the
 Austrian package tax to the shipping total. Voucher records stay on the server.
 
 Cart validation allows five attempts per minute per client IP, counting each
-operation in a tRPC batch. The limiter lives in the app process. In the default
-direct local setup, requests share one bucket. To distinguish IPs behind a
-trusted reverse proxy, have that proxy overwrite `X-Forwarded-For` with a single
-client IP, restrict direct access to the app, and set `TRUST_PROXY=true`.
+operation in a tRPC batch. The limiter lives in the app process. Direct access
+is for local development and shares a single bucket. To expose Next.js to
+shared or network clients, put a trusted reverse proxy in front of it and
+restrict network access so clients can only reach the proxy. The proxy must
+overwrite `X-Forwarded-For` with a single client IP. Set `TRUST_PROXY=true`
+for that deployment.
 
 ## Legacy REST compatibility
 
