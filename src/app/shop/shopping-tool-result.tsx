@@ -33,6 +33,20 @@ function delivery({ min, max }: { min: number; max: number }) {
   return min === 1 ? "1 day" : `${min} days`;
 }
 
+export function isStructuredShoppingResult(part: ShoppingMessage["parts"][number]) {
+  return (
+    (part.type === "tool-searchProducts" ||
+      part.type === "tool-getOffers" ||
+      part.type === "tool-askQuestion" ||
+      part.type === "tool-validateCart") &&
+    part.state === "output-available"
+  );
+}
+
+export function isShoppingToolError(part: ShoppingMessage["parts"][number]) {
+  return "state" in part && part.state === "output-error";
+}
+
 export function ShoppingToolResult({
   part,
   ask,

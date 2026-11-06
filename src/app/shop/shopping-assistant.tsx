@@ -51,7 +51,11 @@ import {
 } from "~/lib/shopping-agent";
 
 import styles from "./desk.module.css";
-import { ShoppingToolResult } from "./shopping-tool-result";
+import {
+  isShoppingToolError,
+  isStructuredShoppingResult,
+  ShoppingToolResult,
+} from "./shopping-tool-result";
 
 const startingPoints = [
   {
@@ -104,8 +108,7 @@ export function ShoppingAssistant() {
   const hasAssistantOutput =
     lastMessage?.role === "assistant" &&
     lastMessage.parts.some(
-      (part) => (part.type === "text" && Boolean(part.text.trim())) ||
-        part.type.startsWith("tool-"),
+      (part) => isStructuredShoppingResult(part) || isShoppingToolError(part),
     );
 
   function ask(prompt: string) {
@@ -187,46 +190,58 @@ export function ShoppingAssistant() {
                       </div>
                     </MessageScrollerItem>
                   ) : (
-                    messages.map((message) => (
-                      <MessageScrollerItem
-                        key={message.id}
-                        messageId={message.id}
-                        scrollAnchor={message.role === "user"}
-                      >
-                        <Message align={message.role === "user" ? "end" : "start"}>
-                          <MessageContent className="w-full min-w-0 gap-3">
-                            <MessageHeader className="px-0">
-                              {message.role === "user" ? "You" : "Shopping assistant"}
-                            </MessageHeader>
-                            {message.parts.map((part, index) => {
-                              if (part.type === "text" && part.text.trim()) {
-                                const body = (
-                                  <p className="max-w-[68ch] whitespace-pre-wrap wrap-anywhere">
-                                    {part.text}
-                                  </p>
+                    messages.map((message) => {
+                      const isLatest = message.id === lastMessage?.id;
+                      const showText = message.role === "user" ||
+                        (!(busy && isLatest) && !message.parts.some(isStructuredShoppingResult));
+                      const visibleParts = message.parts.filter((part) =>
+                        part.type === "text"
+                          ? showText && part.text.trim()
+                          : isStructuredShoppingResult(part) || isShoppingToolError(part),
+                      );
+                      if (visibleParts.length === 0) return null;
+
+                      return (
+                        <MessageScrollerItem
+                          key={message.id}
+                          messageId={message.id}
+                          scrollAnchor={message.role === "user"}
+                        >
+                          <Message align={message.role === "user" ? "end" : "start"}>
+                            <MessageContent className="w-full min-w-0 gap-3">
+                              <MessageHeader className="px-0">
+                                {message.role === "user" ? "You" : "Shopping assistant"}
+                              </MessageHeader>
+                              {visibleParts.map((part, index) => {
+                                if (part.type === "text") {
+                                  const body = (
+                                    <p className="max-w-[68ch] whitespace-pre-wrap wrap-anywhere">
+                                      {part.text}
+                                    </p>
+                                  );
+                                  return message.role === "user" ? (
+                                    <Bubble key={index}>
+                                      <BubbleContent>{body}</BubbleContent>
+                                    </Bubble>
+                                  ) : (
+                                    <div key={index}>{body}</div>
+                                  );
+                                }
+                                return (
+                                  <ShoppingToolResult
+                                    key={index}
+                                    part={part}
+                                    ask={ask}
+                                    canSend={canSend}
+                                    isLatest={isLatest}
+                                  />
                                 );
-                                return message.role === "user" ? (
-                                  <Bubble key={index}>
-                                    <BubbleContent>{body}</BubbleContent>
-                                  </Bubble>
-                                ) : (
-                                  <div key={index}>{body}</div>
-                                );
-                              }
-                              return (
-                                <ShoppingToolResult
-                                  key={index}
-                                  part={part}
-                                  ask={ask}
-                                  canSend={canSend}
-                                  isLatest={message.id === lastMessage?.id}
-                                />
-                              );
-                            })}
-                          </MessageContent>
-                        </Message>
-                      </MessageScrollerItem>
-                    ))
+                              })}
+                            </MessageContent>
+                          </Message>
+                        </MessageScrollerItem>
+                      );
+                    })
                   )}
                   {busy && !hasAssistantOutput && (
                     <MessageScrollerItem>

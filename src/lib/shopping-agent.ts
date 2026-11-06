@@ -4,10 +4,13 @@ import type { WebLLMLanguageModel } from "@browser-ai/web-llm";
 import {
   convertToModelMessages,
   createUIMessageStream,
+  extractReasoningMiddleware,
   hasToolCall,
   isStepCount,
+  simulateStreamingMiddleware,
   toUIMessageStream,
   ToolLoopAgent,
+  wrapLanguageModel,
   type ChatTransport,
   type InferUITools,
   type UIMessage,
@@ -65,7 +68,14 @@ async function getModel(onProgress: ProgressListener, abortSignal?: AbortSignal)
 
 function createShoppingAgent(model: WebLLMLanguageModel) {
   return new ToolLoopAgent({
-    model,
+    model: wrapLanguageModel({
+      model,
+      middleware: [
+        // WebLLM 3.0.4 can hang when a tool-call fence ends across chunks.
+        simulateStreamingMiddleware(),
+        extractReasoningMiddleware({ tagName: "think" }),
+      ],
+    }),
     tools: createShoppingTools(),
     stopWhen: [isStepCount(4), hasToolCall("askQuestion")],
     maxOutputTokens: 420,
