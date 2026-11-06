@@ -1,27 +1,11 @@
 import { sql } from "drizzle-orm";
-import type { drizzle } from "drizzle-orm/postgres-js";
+import { drizzle } from "drizzle-orm/postgres-js";
 import type { Dataset } from "~/types";
 import {
   categories, offers, products, variants, vendors, vouchers, warehouses,
 } from "./schema";
 
 type SeedDatabase = ReturnType<typeof drizzle>;
-type SeedTransaction = Parameters<Parameters<SeedDatabase["transaction"]>[0]>[0];
-
-export function replaceCatalog<T>(db: SeedDatabase, populate: (tx: SeedTransaction) => Promise<T>) {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`lock table ${categories}, ${products}, ${variants}, ${offers},
-      ${vendors}, ${warehouses}, ${vouchers} in share row exclusive mode`);
-    await tx.delete(offers);
-    await tx.delete(variants);
-    await tx.delete(products);
-    await tx.delete(vouchers);
-    await tx.delete(categories);
-    await tx.delete(vendors);
-    await tx.delete(warehouses);
-    return populate(tx);
-  });
-}
 
 export async function seedCatalog(db: SeedDatabase, dataset: Dataset) {
   const productRows = dataset.products.map(({ variants: _, ...product }, position) => ({
@@ -47,7 +31,17 @@ export async function seedCatalog(db: SeedDatabase, dataset: Dataset) {
     ),
   );
 
-  await replaceCatalog(db, async (tx) => {
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`lock table ${categories}, ${products}, ${variants}, ${offers},
+      ${vendors}, ${warehouses}, ${vouchers} in share row exclusive mode`);
+    await tx.delete(offers);
+    await tx.delete(variants);
+    await tx.delete(products);
+    await tx.delete(vouchers);
+    await tx.delete(categories);
+    await tx.delete(vendors);
+    await tx.delete(warehouses);
+
     if (dataset.categories.length) {
       await tx.insert(categories).values(dataset.categories.map((row, position) => ({ ...row, position })));
     }

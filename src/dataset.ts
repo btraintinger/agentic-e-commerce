@@ -75,15 +75,18 @@ const datasetSchema = z.object({
   vouchers: z.array(voucherSchema),
 });
 
-export function readDataset(path?: string): Dataset {
-  const resolvedPath = path ?? process.env.DATASET_PATH ?? "data/dataset.json";
-  const raw = readFileSync(resolvedPath, "utf-8");
-  const parsed: unknown = JSON.parse(raw);
-  const result = datasetSchema.safeParse(parsed);
+export function parseDataset(input: unknown): Dataset {
+  const result = datasetSchema.safeParse(input);
   if (!result.success) {
     throw new Error(
       `Dataset validation failed: ${result.error.message}`,
     );
   }
   return result.data;
+}
+
+export function readDataset(path?: string): Dataset {
+  const resolvedPath = path ?? process.env.DATASET_PATH ?? "data/dataset.json";
+  const raw = readFileSync(resolvedPath, "utf-8");
+  return parseDataset(JSON.parse(raw));
 }

@@ -1,66 +1,10 @@
 import { writeFileSync } from "node:fs";
-
-let idCounter = 0;
-function uid(prefix) {
-  idCounter++;
-  const hex = String(idCounter).padStart(12, "0");
-  return `${prefix}-${hex.slice(0, 8)}-${hex.slice(8, 12)}-0000-000000000000`;
-}
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+import { pathToFileURL } from "node:url";
 
 const MALE_SIZES = ["S", "M", "L", "XL", "XXL"];
 const FEMALE_SIZES = ["XS", "S", "M", "L", "XL"];
 const UNISEX_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 const SHOE_SIZES = [38, 39, 40, 41, 42, 43, 44, 45, 46];
-
-function pickGender() {
-  const r = Math.random();
-  if (r < 0.4) return "male";
-  if (r < 0.8) return "female";
-  return "unisex";
-}
-
-const categories = [
-  { id: uid("cat"), name: "Electronics & Gadgets", description: "Laptops, tablets, headphones, USB hubs, power banks, monitors, webcams, keyboards, mice and other tech essentials for JKU students" },
-  { id: uid("cat"), name: "Textbooks & Stationery", description: "Mathematics, computer science and engineering textbooks, notebooks, pens, planners, whiteboards, calculators and study supplies" },
-  { id: uid("cat"), name: "JKU Merchandise & Apparel", description: "Official JKU Linz hoodies, t-shirts, caps, tote bags, mugs and branded merchandise for proud Kepler University students" },
-  { id: uid("cat"), name: "Campus Clothing", description: "Winter jackets, rain jackets, sneakers, thermal wear, casual shirts and everyday fashion for campus life" },
-  { id: uid("cat"), name: "Software & Subscriptions", description: "Office 365, JetBrains, Adobe Creative Cloud, GitHub Student Developer Pack, cloud storage and academic software licenses" },
-  { id: uid("cat"), name: "Campus Accessories", description: "Backpacks, water bottles, umbrellas, bike lights, lunch boxes, phone cases and everyday carry items for JKU students" },
-];
-
-const vendors = [
-  { id: uid("ven"), name: "JKU Campus Shop", rating: 4.8 },
-  { id: uid("ven"), name: "Amazon.at", rating: 4.6 },
-  { id: uid("ven"), name: "MediaMarkt", rating: 4.3 },
-  { id: uid("ven"), name: "Thalia.at", rating: 4.1 },
-  { id: uid("ven"), name: "RS Components", rating: 4.0 },
-];
-
-const warehouses = [
-  { id: uid("war"), name: "Linz (JKU Campus)", country: "AT", packageTax: 300 },
-  { id: uid("war"), name: "Wien", country: "AT", packageTax: 300 },
-  { id: uid("war"), name: "München", country: "DE" },
-  { id: uid("war"), name: "Amsterdam", country: "NL" },
-];
-
-const vouchers = [
-  { code: "WELCOME10", type: "percent", value: 10, description: "10% off your first order" },
-  { code: "STUDENT20", type: "percent", value: 20, categoryId: categories[3].id, description: "20% off campus clothing" },
-  { code: "FLAT500", type: "fixed", value: 500, description: "500 cents off any order" },
-  { code: "MINORDER3000", type: "fixed", value: 1000, minOrderValue: 5000, description: "1000 cents off orders over 5000 cents" },
-  { code: "EXPIRED2024", type: "percent", value: 15, validUntil: "2024-12-31", description: "15% off (expired)" },
-  { code: "JKULINZ10", type: "percent", value: 10, categoryId: categories[2].id, description: "10% off JKU merchandise" },
-  { code: "NEAREXPIRY", type: "percent", value: 10, validUntil: "2026-08-31", description: "10% off - expiring soon" },
-  { code: "GROSSORDER15", type: "percent", value: 15, minOrderValue: 30000, description: "15% off orders over €300" },
-];
 
 // vendor index → [allowed warehouse indices]
 const vendorWarehouses = [
@@ -79,74 +23,6 @@ const vendorShippingProfiles = [
   { freeProb: 0.85, paidCosts: [395, 495, 595] },
   { freeProb: 0.60, paidCosts: [295, 395, 495, 595, 695] },
 ];
-
-function generateOffer(vendorIdx, basePrice) {
-  const vendor = vendors[vendorIdx];
-  const whIdx = pick(vendorWarehouses[vendorIdx]);
-  const warehouse = warehouses[whIdx];
-  const priceMultiplier = [1.0, 0.98, 1.02, 0.95, 0.85][vendorIdx];
-  const price = Math.round(basePrice * priceMultiplier * (0.92 + Math.random() * 0.16) / 100) * 100;
-  const profile = vendorShippingProfiles[vendorIdx];
-  const isFree = Math.random() < profile.freeProb;
-  const shippingCost = isFree ? 0 : pick(profile.paidCosts.length ? profile.paidCosts : [0]);
-  return {
-    id: uid("off"),
-    vendorId: vendor.id,
-    warehouseId: warehouse.id,
-    price,
-    currency: "EUR",
-    shippingCost,
-    freeShippingThreshold: shippingCost > 0 ? price * 3 : undefined,
-    deliveryDays: { min: randInt(1, 3), max: randInt(3, 12) },
-    stock: (() => { const s = Math.random() < 0.08 ? 0 : Math.random() < 0.12 ? randInt(1, 5) : randInt(0, 500); return s === 0 ? "NO" : s <= 10 ? "LITTLE" : "ALOT"; })(),
-  };
-}
-
-function generateOffers(basePrice, minV = 2, maxV = 4) {
-  const numOffers = randInt(minV, maxV);
-  const used = new Set();
-  const offers = [];
-  for (let i = 0; i < numOffers; i++) {
-    let vi;
-    do {
-      vi = randInt(0, vendors.length - 1);
-    } while (used.has(vi));
-    used.add(vi);
-    offers.push(generateOffer(vi, basePrice));
-  }
-  return offers;
-}
-
-function makeVariants(skuPrefix, configs, basePrice, priceFn) {
-  return configs.map((cfg) => {
-    const variantPrice = priceFn ? priceFn(basePrice, cfg) : basePrice;
-    return {
-      id: uid("var"),
-      sku: `${skuPrefix}-${cfg.name ? cfg.name.replace(/[\s/]/g, "").slice(0, 8) : "var"}`,
-      name: cfg.name || "",
-      attributes: cfg.attrs || {},
-      offers: generateOffers(variantPrice),
-    };
-  });
-}
-
-function randomTags(pool) {
-  const defaultPool = ["new", "bestseller", "sale", "trending", "limited", "premium", "budget", "eco-friendly", "wireless", "waterproof", "lightweight", "durable", "ergonomic", "gaming", "professional", "student", "travel", "home", "top-rated", "exclusive"];
-  const src = pool || defaultPool;
-  const count = randInt(1, 4);
-  const tags = new Set();
-  while (tags.size < count) tags.add(pick(src));
-  return [...tags];
-}
-
-// ── Category product definitions ──────────────────────────────────
-
-const electronicsCatId = categories[0].id;
-const textbooksCatId = categories[1].id;
-const jkuMerchCatId = categories[2].id;
-const clothingCatId = categories[3].id;
-const softwareCatId = categories[4].id;
-const accessoriesCatId = categories[5].id;
 
 // ── Electronics & Gadgets (40) ────────────────────────────────────
 
@@ -394,143 +270,128 @@ const accessoryProducts = [
   { name: "Anker USB-C Cable 2m Braided", brand: "Anker", desc: "Durable braided USB-C to C cable with 100W PD charging for your JKU laptop and phone", basePrice: 1499, attrs: { length: "2m", charging: "100W", data: "10Gbps", color: "Black" }, tags: ["student", "durable"] },
 ];
 
-// ── Build products from data ──────────────────────────────────────
-
-function typedProduct(p, catId, tagPool) {
-  return {
-    id: uid("prd"),
-    categoryId: catId,
-    name: p.name,
-    description: p.desc,
-    brand: p.brand,
-    tags: [...new Set([...randomTags(tagPool), ...(p.tags || [])])],
-    attributes: p.attrs,
-    variants: [],
+function mulberry32(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let value = Math.imul(state ^ (state >>> 15), state | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 2 ** 32;
   };
 }
 
-function categoryFromTemplateList(products, catId, variantConfigsFn, tagPool) {
-  return products.map((p) => {
-    const prod = typedProduct(p, catId, tagPool);
-    const configs = variantConfigsFn(p);
-    prod.variants = configs.map((cfg) => ({
-      id: uid("var"),
-      sku: `${p.brand.slice(0, 3).toUpperCase()}-${p.name.replace(/[\s,']/g, "").slice(0, 10)}-${cfg.skuSuffix || cfg.name}`,
-      name: cfg.name || "",
-      attributes: cfg.attrs || {},
-      offers: generateOffers(cfg.basePrice),
-    }));
-    return prod;
-  });
-}
+export function generateDataset(seed = 2026) {
+  const random = mulberry32(seed);
 
-function laptopVariantConfigs(basePrice, configPool) {
-  const selected = configPool.slice(0, randInt(2, 4));
-  return selected.map((cfg) => ({
-    ...cfg,
-    basePrice: basePrice + (cfg.attrs.ram * 1500) + (/2TB/.test(cfg.attrs.storage) ? 15000 : /1TB/.test(cfg.attrs.storage) ? 8000 : /512/.test(cfg.attrs.storage) ? 4000 : 2000),
-  }));
-}
-
-function clothingVariantConfigs(basePrice, _catId, gender) {
-  const sizePool = gender === "male" ? MALE_SIZES : gender === "female" ? FEMALE_SIZES : UNISEX_SIZES;
-  const colors = ["Black", "White", "Navy", "Grey", "Khaki"];
-  const selectedSizes = sizePool.slice(0, randInt(3, 5));
-  const selectedColors = colors.slice(0, randInt(2, 4));
-  const count = randInt(3, Math.min(selectedSizes.length * selectedColors.length, 6));
-  const result = [];
-  const used = new Set();
-  for (let i = 0; i < count; i++) {
-    let size, color;
-    do { size = pick(selectedSizes); color = pick(selectedColors); } while (used.has(`${size}-${color}`));
-    used.add(`${size}-${color}`);
-    const extra = (size === "XL" || size === "XXL") ? 500 : 0;
-    result.push({ name: `${size} / ${color}`, attrs: { size, color, gender }, basePrice: basePrice + extra, skuSuffix: `${size}-${color}` });
+  let idCounter = 0;
+  function uid(prefix) {
+    idCounter++;
+    const hex = String(idCounter).padStart(12, "0");
+    return `${prefix}-${hex.slice(0, 8)}-${hex.slice(8, 12)}-0000-000000000000`;
   }
-  return result;
-}
 
-function jkuMerchVariantConfigs(basePrice) {
-  const sizes = ["S", "M", "L", "XL", "XXL"];
-  const count = randInt(3, 5);
-  const result = [];
-  const used = new Set();
-  for (let i = 0; i < count; i++) {
-    let size;
-    do { size = pick(sizes); } while (used.has(size));
-    used.add(size);
-    const extra = (size === "XL" || size === "XXL") ? 500 : 0;
-    result.push({ name: size, attrs: { size }, basePrice: basePrice + extra, skuSuffix: size });
+  function pick(arr) {
+    return arr[Math.floor(random() * arr.length)];
   }
-  return result;
-}
 
-function textbookVariantConfigs(basePrice) {
-  const formats = ["Paperback", "Hardcover"];
-  const selected = formats.slice(0, randInt(1, 2));
-  return selected.map((fmt) => ({
-    name: fmt,
-    attrs: { format: fmt },
-    basePrice: fmt === "Hardcover" ? basePrice + 2000 : basePrice,
-    skuSuffix: fmt,
-  }));
-}
-
-function softwareVariantConfigs(basePrice) {
-  const durations = ["1 Year", "2 Year", "Perpetual"];
-  if (basePrice === 0) {
-    return [{ name: "Free Student License", attrs: { duration: "1 Year" }, basePrice: 0, skuSuffix: "free" }];
+  function randInt(min, max) {
+    return Math.floor(random() * (max - min + 1)) + min;
   }
-  const selected = durations.slice(0, randInt(1, durations.length));
-  return selected.map((d) => ({
-    name: d,
-    attrs: { duration: d },
-    basePrice: d === "2 Year" ? basePrice * 1.8 : d === "Perpetual" ? basePrice * 2.5 : basePrice,
-    skuSuffix: d.replace(/\s/g, ""),
-  }));
-}
 
-function accessoryVariantConfigs(basePrice) {
-  const colors = ["Black", "White", "Navy", "Grey", "Green"];
-  const selected = colors.slice(0, randInt(2, 4));
-  return selected.map((color) => ({
-    name: color,
-    attrs: { color },
-    basePrice: basePrice + (color === "Navy" ? 500 : 0),
-    skuSuffix: color,
-  }));
-}
+  function pickGender() {
+    const r = random();
+    if (r < 0.4) return "male";
+    if (r < 0.8) return "female";
+    return "unisex";
+  }
 
-function countFromData(arr) {
-  return arr.map((p) => [p, 1]);
-}
+  const categories = [
+    { id: uid("cat"), name: "Electronics & Gadgets", description: "Laptops, tablets, headphones, USB hubs, power banks, monitors, webcams, keyboards, mice and other tech essentials for JKU students" },
+    { id: uid("cat"), name: "Textbooks & Stationery", description: "Mathematics, computer science and engineering textbooks, notebooks, pens, planners, whiteboards, calculators and study supplies" },
+    { id: uid("cat"), name: "JKU Merchandise & Apparel", description: "Official JKU Linz hoodies, t-shirts, caps, tote bags, mugs and branded merchandise for proud Kepler University students" },
+    { id: uid("cat"), name: "Campus Clothing", description: "Winter jackets, rain jackets, sneakers, thermal wear, casual shirts and everyday fashion for campus life" },
+    { id: uid("cat"), name: "Software & Subscriptions", description: "Office 365, JetBrains, Adobe Creative Cloud, GitHub Student Developer Pack, cloud storage and academic software licenses" },
+    { id: uid("cat"), name: "Campus Accessories", description: "Backpacks, water bottles, umbrellas, bike lights, lunch boxes, phone cases and everyday carry items for JKU students" },
+  ];
 
-function generateCategory(products, catId, variantFn, tagPool) {
-  return products.map((p) => {
-    const prod = {
-      id: uid("prd"),
-      categoryId: catId,
-      name: p.name,
-      description: p.desc,
-      brand: p.brand,
-      tags: [...new Set([...randomTags(tagPool), ...(p.tags || [])])],
-      attributes: p.attrs,
-      variants: [],
+  const vendors = [
+    { id: uid("ven"), name: "JKU Campus Shop", rating: 4.8 },
+    { id: uid("ven"), name: "Amazon.at", rating: 4.6 },
+    { id: uid("ven"), name: "MediaMarkt", rating: 4.3 },
+    { id: uid("ven"), name: "Thalia.at", rating: 4.1 },
+    { id: uid("ven"), name: "RS Components", rating: 4.0 },
+  ];
+
+  const warehouses = [
+    { id: uid("war"), name: "Linz (JKU Campus)", country: "AT", packageTax: 300 },
+    { id: uid("war"), name: "Wien", country: "AT", packageTax: 300 },
+    { id: uid("war"), name: "München", country: "DE" },
+    { id: uid("war"), name: "Amsterdam", country: "NL" },
+  ];
+
+  const vouchers = [
+    { code: "WELCOME10", type: "percent", value: 10, description: "10% off your first order" },
+    { code: "STUDENT20", type: "percent", value: 20, categoryId: categories[3].id, description: "20% off campus clothing" },
+    { code: "FLAT500", type: "fixed", value: 500, description: "500 cents off any order" },
+    { code: "MINORDER3000", type: "fixed", value: 1000, minOrderValue: 5000, description: "1000 cents off orders over 5000 cents" },
+    { code: "EXPIRED2024", type: "percent", value: 15, validUntil: "2024-12-31", description: "15% off (expired)" },
+    { code: "JKULINZ10", type: "percent", value: 10, categoryId: categories[2].id, description: "10% off JKU merchandise" },
+    { code: "NEAREXPIRY", type: "percent", value: 10, validUntil: "2026-08-31", description: "10% off - expiring soon" },
+    { code: "GROSSORDER15", type: "percent", value: 15, minOrderValue: 30000, description: "15% off orders over €300" },
+  ];
+
+  function generateOffer(vendorIdx, basePrice) {
+    const vendor = vendors[vendorIdx];
+    const whIdx = pick(vendorWarehouses[vendorIdx]);
+    const warehouse = warehouses[whIdx];
+    const priceMultiplier = [1.0, 0.98, 1.02, 0.95, 0.85][vendorIdx];
+    const price = Math.round(basePrice * priceMultiplier * (0.92 + random() * 0.16) / 100) * 100;
+    const profile = vendorShippingProfiles[vendorIdx];
+    const isFree = random() < profile.freeProb;
+    const shippingCost = isFree ? 0 : pick(profile.paidCosts.length ? profile.paidCosts : [0]);
+    return {
+      id: uid("off"),
+      vendorId: vendor.id,
+      warehouseId: warehouse.id,
+      price,
+      currency: "EUR",
+      shippingCost,
+      freeShippingThreshold: shippingCost > 0 ? price * 3 : undefined,
+      deliveryDays: { min: randInt(1, 3), max: randInt(3, 12) },
+      stock: (() => { const s = random() < 0.08 ? 0 : random() < 0.12 ? randInt(1, 5) : randInt(0, 500); return s === 0 ? "NO" : s <= 10 ? "LITTLE" : "ALOT"; })(),
     };
-    prod.variants = variantFn(p.basePrice, catId).map((cfg) => ({
-      id: uid("var"),
-      sku: `${p.brand.slice(0, 3).toUpperCase()}-${p.name.replace(/[\s,']/g, "").slice(0, 10)}-${cfg.skuSuffix || cfg.name}`,
-      name: cfg.name || "",
-      attributes: cfg.attrs || {},
-      offers: generateOffers(cfg.basePrice),
-    }));
-    return prod;
-  });
-}
+  }
 
-// ── Assemble all products ─────────────────────────────────────────
+  function generateOffers(basePrice, minV = 2, maxV = 4) {
+    const numOffers = randInt(minV, maxV);
+    const used = new Set();
+    const offers = [];
+    for (let i = 0; i < numOffers; i++) {
+      let vi;
+      do {
+        vi = randInt(0, vendors.length - 1);
+      } while (used.has(vi));
+      used.add(vi);
+      offers.push(generateOffer(vi, basePrice));
+    }
+    return offers;
+  }
 
-function buildAllProducts() {
+  function randomTags() {
+    const defaultPool = ["new", "bestseller", "sale", "trending", "limited", "premium", "budget", "eco-friendly", "wireless", "waterproof", "lightweight", "durable", "ergonomic", "gaming", "professional", "student", "travel", "home", "top-rated", "exclusive"];
+    const count = randInt(1, 4);
+    const tags = new Set();
+    while (tags.size < count) tags.add(pick(defaultPool));
+    return [...tags];
+  }
+
+  const electronicsCatId = categories[0].id;
+  const textbooksCatId = categories[1].id;
+  const jkuMerchCatId = categories[2].id;
+  const clothingCatId = categories[3].id;
+  const softwareCatId = categories[4].id;
+  const accessoriesCatId = categories[5].id;
+
   const allProducts = [];
 
   // Electronics & Gadgets (laptop-like configs)
@@ -542,7 +403,7 @@ function buildAllProducts() {
       description: p.desc,
       brand: p.brand,
       tags: [...new Set([...randomTags(), ...(p.tags || [])])],
-      attributes: p.attrs,
+      attributes: { ...p.attrs },
       variants: [],
     };
     const selected = laptopConfigs.slice(0, randInt(2, 4));
@@ -552,7 +413,7 @@ function buildAllProducts() {
         id: uid("var"),
         sku: `${p.brand.slice(0, 3).toUpperCase()}-${p.name.replace(/[\s,']/g, "").slice(0, 10)}-${cfg.attrs.ram}G-${cfg.attrs.storage.replace(/[^a-zA-Z0-9]/g, "")}`,
         name: cfg.name,
-        attributes: cfg.attrs,
+        attributes: { ...cfg.attrs },
         offers: generateOffers(vPrice),
       });
     }
@@ -568,7 +429,7 @@ function buildAllProducts() {
       description: p.desc,
       brand: p.brand || "Various",
       tags: [...new Set([...randomTags(), ...(p.tags || [])])],
-      attributes: p.attrs,
+      attributes: { ...p.attrs },
       variants: [],
     };
     const formats = ["Paperback", "Hardcover"].slice(0, randInt(1, 2));
@@ -594,7 +455,7 @@ function buildAllProducts() {
       description: p.desc,
       brand: p.brand,
       tags: [...new Set([...randomTags(), ...(p.tags || [])])],
-      attributes: p.attrs,
+      attributes: { ...p.attrs },
       variants: [],
     };
     const sizes = ["S", "M", "L", "XL", "XXL"].slice(0, randInt(3, 5));
@@ -676,7 +537,7 @@ function buildAllProducts() {
       description: p.desc,
       brand: p.brand,
       tags: [...new Set([...randomTags(), ...(p.tags || [])])],
-      attributes: p.attrs,
+      attributes: { ...p.attrs },
       variants: [],
     };
     if (p.basePrice === 0) {
@@ -713,7 +574,7 @@ function buildAllProducts() {
       description: p.desc,
       brand: p.brand,
       tags: [...new Set([...randomTags(), ...(p.tags || [])])],
-      attributes: p.attrs,
+      attributes: { ...p.attrs },
       variants: [],
     };
     for (const color of colors) {
@@ -729,7 +590,8 @@ function buildAllProducts() {
     allProducts.push(prod);
   }
 
-  return allProducts;
+  addStarterSetTags(allProducts);
+  return { categories, products: allProducts, vendors, warehouses, vouchers };
 }
 
 // ── Add starter-set tag ───────────────────────────────────────────
@@ -757,14 +619,10 @@ function addStarterSetTags(products) {
   }
 }
 
-// ── Main ──────────────────────────────────────────────────────────
-
 function main() {
-  const products = buildAllProducts();
-  addStarterSetTags(products);
-
-  const dataset = { categories, products, vendors, warehouses, vouchers };
-  writeFileSync("data/dataset.json", JSON.stringify(dataset, null, 2));
+  const dataset = generateDataset();
+  const { products } = dataset;
+  writeFileSync(process.argv[2] ?? "data/dataset.json", JSON.stringify(dataset, null, 2));
 
   let variantCount = 0;
   let offerCount = 0;
@@ -786,4 +644,10 @@ function main() {
   console.log(`  starter-set products: ${starterSetProducts.length}`);
 }
 
-main();
+const invokedDirectly = import.meta.main ?? (
+  process.argv[1] !== undefined &&
+  !process.execArgv.some((arg) => /^(-[ep]|--eval|--print)(=|$)/.test(arg)) &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+);
+
+if (invokedDirectly) main();

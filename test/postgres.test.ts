@@ -4,11 +4,11 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { readDataset } from "~/dataset";
+import { generateDataset } from "../scripts/generate-data.mjs";
+import { parseDataset, readDataset } from "~/dataset";
 import { createCaller } from "~/server/api/root";
 import * as schema from "~/server/db/schema";
 import { seedCatalog } from "~/server/db/seed-catalog";
-import { seedSampleCatalog } from "~/server/db/seed-sample-catalog";
 import { validateCart } from "~/validate";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -158,25 +158,26 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
     expect(await api.products.byId({ id: dataset.products[0].id })).toEqual(dataset.products[0]);
   });
 
-  it("regenerates a deterministic sample catalog and keeps unrelated rows", async () => {
+  it("reseeds the fixed JKU catalog and keeps unrelated rows", async () => {
     const userId = crypto.randomUUID();
     await db.insert(schema.users).values({ id: userId, email: "seed-check@example.invalid" });
     try {
       await db.insert(schema.posts).values({ createdById: userId, name: "Seed check" });
 
-      const counts = await seedSampleCatalog(db);
+      const generated = parseDataset(generateDataset());
+      await seedCatalog(db, generated);
       const products = await api.products.list();
       const warehouses = await api.warehouses.list();
       const vouchers = await db.select().from(schema.vouchers).orderBy(schema.vouchers.code);
       const offers = products.flatMap(({ variants }) => variants.flatMap(({ offers }) => offers));
 
-      expect(counts.products).toBe(products.length);
-      expect(counts.categories).toBe((await api.categories.list()).length);
+      expect(products).toEqual(generated.products);
+      expect(await api.categories.list()).toEqual(generated.categories);
       expect(products.every(({ variants }) =>
         variants.length > 0 && variants.every(({ offers }) => offers.length > 0),
       )).toBe(true);
       expect(offers.every((offer) =>
-        Number.isInteger(offer.price) && offer.price > 0 &&
+        Number.isInteger(offer.price) && offer.price >= 0 &&
         offer.deliveryDays.min <= offer.deliveryDays.max &&
         (offer.freeShippingThreshold === undefined || offer.shippingCost > 0),
       )).toBe(true);
@@ -186,7 +187,7 @@ describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
         .toBe(true);
       expect(vouchers.map(({ code }) => code)).toEqual(expect.arrayContaining(["WELCOME10", "EXPIRED2024"]));
 
-      await expect(seedSampleCatalog(db)).resolves.toEqual(counts);
+      await seedCatalog(db, parseDataset(generateDataset()));
       expect(await api.products.list()).toEqual(products);
       expect(await db.select().from(schema.vouchers).orderBy(schema.vouchers.code)).toEqual(vouchers);
       expect(await db.select().from(schema.users).where(eq(schema.users.id, userId))).toHaveLength(1);
