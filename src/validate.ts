@@ -1,5 +1,6 @@
 import type { Dataset, Offer, StockLevel, ValidateRequest, ValidateResponse, CartIssue, Shipment, ShipmentItem, Voucher } from "./types.js";
-import { getDataset } from "./dataset.js";
+
+type CartDataset = Pick<Dataset, "products" | "warehouses" | "vouchers">;
 
 interface OfferEntry {
   offer: Offer;
@@ -15,7 +16,7 @@ function stockAvailable(level: StockLevel): number {
   return 9999;
 }
 
-function buildOfferMap(dataset: Dataset): Map<string, OfferEntry> {
+function buildOfferMap(dataset: CartDataset): Map<string, OfferEntry> {
   const map = new Map<string, OfferEntry>();
   for (const product of dataset.products) {
     for (const variant of product.variants) {
@@ -33,7 +34,7 @@ function buildOfferMap(dataset: Dataset): Map<string, OfferEntry> {
   return map;
 }
 
-export function validateCart(request: ValidateRequest, dataset: Dataset): ValidateResponse {
+export function validateCart(request: ValidateRequest, dataset: CartDataset): ValidateResponse {
   const issues: CartIssue[] = [];
   const validItems: ShipmentItem[] = [];
   const offerMap = buildOfferMap(dataset);
@@ -150,7 +151,7 @@ export function validateCart(request: ValidateRequest, dataset: Dataset): Valida
   };
 }
 
-function computeDiscount(voucher: Voucher, validItems: ShipmentItem[], dataset: Dataset): number {
+function computeDiscount(voucher: Voucher, validItems: ShipmentItem[], dataset: CartDataset): number {
   const eligibleSubtotal = voucher.categoryId
     ? validItems
         .filter(item => {

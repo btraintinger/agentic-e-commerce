@@ -1,7 +1,10 @@
 node_modules/
 dist/
-*.js
-*.d.ts
-*.d.ts.map
-*.js.map
+.next/
+out/
+coverage/
+next-env.d.ts
+*.tsbuildinfo
 .env
+.env*.local
+*.pem

@@ -1,158 +1,96 @@
-# Webshop Backend — IT Project 2026/27
+# Agentic E-Commerce — IT Project 2026/27
 
-Read-only webshop catalog backend for a student exercise at JKU Linz: students
-fill a shopping cart through an AI chat assistant that uses tool calling to query
-products and validate selections. The cart lives entirely in the frontend — this
-backend only serves catalog data and offers a stateless `POST /validate` endpoint
-to check cart contents, compute shipments, and apply voucher codes. There is no
-authentication and no image handling; the JSON dataset is portable and swappable.
+A read-only webshop catalog for a JKU Linz student exercise. An AI assistant can
+find products and validate a shopping cart through tRPC. Cart validation computes
+shipments, delivery estimates, shipping charges, and voucher discounts. The
+client holds the cart. The homepage is the default Create T3 App starter.
 
-## Quick Start
+## Local development
 
-### Prerequisites
+Install Node.js 22.13 or later, pnpm, and Docker Compose. From a fresh checkout:
 
-- **Node.js** >= 20
-- **pnpm** (package manager)
-- **Git**
-
-### Installation
-
-```bash
-git clone <repo-url>
-cd webshop-backend
+```sh
 pnpm install
+cp .env.example .env
+docker compose up -d --wait postgres
+pnpm db:migrate
+pnpm db:seed
+pnpm dev
 ```
 
-### Usage
+Next.js serves the starter at `http://localhost:3000` and tRPC at
+`http://localhost:3000/api/trpc`. The app runs on the host and connects to Docker
+Postgres at `127.0.0.1:5433`. The Compose volume retains the database when you
+stop the container.
 
-```bash
-pnpm dev          # starts server on http://localhost:3000 with file watching
+`pnpm db:seed` replaces the catalog and vouchers from `data/dataset.json` in one
+transaction. Rerun it after changing fixtures. Select another fixture with
+`DATASET_PATH=./my-fixture.json pnpm db:seed`. The seed leaves Auth.js and starter
+post tables alone. Regenerate the default fixture with
+`node scripts/generate-data.mjs`.
+
+Auth.js includes the Drizzle adapter and the starter's Discord provider. The
+webshop procedures are public and work with the Auth.js values in `.env.example`
+left blank. When enabling Discord sign-in, set `AUTH_SECRET`, `AUTH_DISCORD_ID`,
+and `AUTH_DISCORD_SECRET` and configure the callback
+`http://localhost:3000/api/auth/callback/discord` with Discord.
+
+## Webshop procedures
+
+| Procedure | Operation | Result |
+| --- | --- | --- |
+| `health` | Query | Service liveness |
+| `categories.list` | Query | All categories |
+| `categories.products` | Query | Products for the supplied category ID |
+| `products.list` | Query | Products filtered by optional category, text, and price bounds |
+| `products.byId` | Query | Product with its variants and offers |
+| `vendors.list` | Query | All vendors |
+| `vendors.byId` | Query | Vendor detail |
+| `warehouses.list` | Query | All warehouses |
+| `cart.validate` | Mutation | Cart issues, shipments, totals, delivery days, and package count |
+
+The server exports `AppRouter` from `src/server/api/root.ts` for typed clients.
+Run `pnpm client` with the app running for a walkthrough. Set `BASE_URL` to target
+another app URL.
+
+Money is expressed in integer euro cents. Product text search is case-insensitive
+and matches name, description, brand, and tags. Both price bounds must match the
+same offer. Cart validation takes `{ items: { offerId, quantity }[], voucherCode? }`
+and returns per-item issues for unknown offers, invalid quantities, and
+insufficient stock. It applies voucher discounts to eligible items and adds the
+Austrian package tax to the shipping total. Voucher records stay on the server.
+
+Cart validation allows five attempts per minute per client IP, counting each
+operation in a tRPC batch. The limiter lives in the app process. In the default
+direct local setup, requests share one bucket. To distinguish IPs behind a
+trusted reverse proxy, have that proxy overwrite `X-Forwarded-For` with a single
+client IP, restrict direct access to the app, and set `TRUST_PROXY=true`.
+
+## Legacy REST compatibility
+
+Existing REST clients can use the transitional Fastify service and the committed
+`openapi.yaml` contract. Run `PORT=3001 pnpm dev:legacy` alongside Next.js, or run
+`pnpm dev:legacy` on its original port 3000 when Next.js is stopped. Swagger UI is
+available at `/docs`. The legacy service reads the JSON fixture at startup and
+supports `DATASET_PATH`.
+
+## Checks
+
+```sh
+pnpm typecheck && pnpm test
+pnpm build
 ```
 
-Swagger UI is available at [http://localhost:3000/docs](http://localhost:3000/docs).
+The PostgreSQL integration suite uses a dedicated, disposable database. Create
+it once and opt in by setting its URL:
 
-## API Overview
-
-| Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET | `/health` | Health check |
-| GET | `/categories` | List all categories |
-| GET | `/categories/:id/products` | Products in a category (404 if unknown) |
-| GET | `/products` | Search products (`?category=`, `&q=`, `&minPrice=`, `&maxPrice=`) |
-| GET | `/products/:id` | Product detail (404 if unknown) |
-| GET | `/vendors` | List all vendors |
-| GET | `/vendors/:id` | Vendor detail (404 if unknown) |
-| GET | `/warehouses` | List all warehouses |
-| POST | `/validate` | Validate cart and compute shipments |
-
-All prices are in **integer euro cents** with currency `EUR`. IDs are UUIDs.
-Vouchers are never exposed via the API — the only way to test a code is through
-`POST /validate`.
-
-## Cart Validation (POST /validate)
-
-The `/validate` endpoint accepts a list of items (offer ID + quantity) and an
-optional voucher code. It validates each item, groups valid ones into shipments
-by vendor and warehouse, computes shipping costs, applies free-shipping
-thresholds, adds Austrian **Paketsteuer** (€3 flat per package for Austrian
-warehouses), and evaluates voucher discounts. The response exposes trade-offs
-between price, delivery speed, and package count so an AI agent can optimise for
-different goals (cheapest, fastest, fewest packages).
-
-Rate-limited to **5 requests per minute per IP**. Returns 429 on overuse.
-
-## CLI Demo Client
-
-The demo client (`client/demo.ts`) showcases the full API capabilities in a
-7-step walkthrough. Start the server first, then run the client:
-
-```bash
-pnpm dev              # terminal 1 — start server
-pnpm client           # terminal 2 — run demo
+```sh
+docker compose exec -T postgres createdb -U webshop webshop_test
+TEST_DATABASE_URL=postgresql://webshop:webshop@127.0.0.1:5433/webshop_test pnpm test
 ```
 
-The client demonstrates:
-
-1. **List categories** — browse the 6 JKU product categories
-2. **Search products** — full-text search across name, description, brand, tags
-3. **Product details** — variants with offers from multiple vendors
-4. **Offer comparison** — cheapest vs fastest vs fewest packages for one variant
-5. **Cart validation with errors** — OFFER_NOT_FOUND and INVALID_QUANTITY issues
-6. **Voucher discount** — apply WELCOME10 for 10% off, see updated totals
-7. **Expired voucher** — VOUCHER_EXPIRED error from EXPIRED2024
-
-The client uses plain `fetch` (no dependencies) and can be used as a reference
-for building AI tool-calling integrations.
-
-## Dataset
-
-The sample dataset (`data/dataset.json`) is JKU-Linz-themed: 201 products across
-6 categories, 5 vendors with realistic shipping profiles, and 4 warehouses
-including "Linz (JKU Campus)". 84% of offers have free shipping. A "JKU Starter
-Set" of ~12 curated products is tagged with `starter-set`.
-
-### Swapping datasets
-
-The dataset is swappable at runtime via the `DATASET_PATH` environment variable
-— no code changes needed. For example:
-
-```bash
-DATASET_PATH=./my-custom-dataset.json pnpm dev
-```
-
-The dataset must conform to the same schema as the default (categories, products,
-vendors, warehouses, vouchers). Validation is handled by zod on load.
-
-To regenerate the default dataset:
-
-```bash
-node scripts/generate-data.mjs
-```
-
-Never edit `data/dataset.json` by hand; always use the generator.
-
-## Development
-
-| Command | Purpose |
-| ------- | ------- |
-| `pnpm dev` | Start server with watch mode |
-| `pnpm start` | Start server (no watch) |
-| `pnpm typecheck` | TypeScript type checking (`tsc --noEmit`) |
-| `pnpm test` | Run test suite (vitest) |
-| `pnpm openapi` | Regenerate `openapi.yaml` from server routes |
-| `pnpm client` | Run CLI demo client (requires running server) |
-| `node scripts/generate-data.mjs` | Regenerate the default dataset |
-
-Tests use `buildServer()` + `fastify.inject` — no live network port needed.
-After making changes, always run `pnpm typecheck && pnpm test`.
-
-## Project Structure
-
-```
-client/demo.ts          # CLI demo client (plain fetch, no deps)
-data/dataset.json       # sample dataset (swappable via DATASET_PATH)
-scripts/
-  generate-data.mjs     # dataset generator
-  openapi.ts            # writes swagger spec to openapi.yaml
-src/
-  index.ts              # entrypoint — reads env, starts server
-  server.ts             # buildServer() factory with plugins and routes
-  types.ts              # all domain + API types (single source of truth)
-  dataset.ts            # zod schemas, loader, lookup indexes
-  validate.ts           # pure cart validation logic (no fastify imports)
-  routes/               # route plugins per resource
-test/                   # vitest suites
-openapi.yaml            # generated, committed — API contract
-```
-
-## Tech Stack
-
-- **Runtime:** Node.js >= 20, pnpm, ESM
-- **Language:** TypeScript (strict mode)
-- **Framework:** Fastify 5 with `@fastify/swagger`, `@fastify/swagger-ui`, `@fastify/rate-limit`
-- **Validation:** zod 4
-- **Testing:** vitest
-- **Dev tooling:** tsx (watch + execution)
+Use `pnpm db:generate` after editing the Drizzle schema and commit the generated
+migration. Run `pnpm openapi` after changes to the legacy REST contract.
 
 ## License
 

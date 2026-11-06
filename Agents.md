@@ -1,50 +1,68 @@
-# Agents.md — Webshop Backend (IT Project 2026/27)
+# Agents.md — Agentic E-Commerce (IT Project 2026/27)
 
 **Rules only, no decisions:** This file contains rules only — instructions that apply to any work in this repo. Durable decisions, rationale, measurements and history do not belong here but in `docs/`/`features/` (or the project docs); open work goes to `Agents.todo.md`, settled matters to git history.
 
-Project context: see `README.md`. Contract: `openapi.yaml` (generated, committed) and
-`src/types.ts` (single source of truth for types and schemas).
+See `README.md` for project context. The tRPC contract is `AppRouter` in
+`src/server/api/root.ts`. Domain types live in `src/types.ts`. The legacy REST
+contract is the generated, committed `openapi.yaml`.
 
 ## Stack
 
-- Node.js >= 20, pnpm, ESM (`"type": "module"`)
-- TypeScript (strict), Fastify 5
-- `@fastify/swagger` + `@fastify/swagger-ui` (docs at `/docs`, spec export to `openapi.yaml`)
-- `@fastify/rate-limit` (only on `POST /validate`: 5 requests / minute / IP)
-- `zod` for dataset validation, `vitest` for tests, `tsx` for dev/scripts
-- Money is always **integer cents**, currency `EUR`. IDs are UUIDs.
+- Node.js >= 22.13, pnpm, ESM (`"type": "module"`), and strict TypeScript
+- Next.js App Router, tRPC, and the default Create T3 App UI
+- Drizzle with PostgreSQL and a local Docker Compose service
+- Auth.js with the Drizzle adapter. Webshop procedures are public.
+- Zod for input and dataset validation, Vitest for tests, and tsx for scripts
+- Money is always **integer cents** in `EUR`. Preserve fixture IDs as strings.
 
 ## Commands
 
-| Command             | Purpose                                        |
-| ------------------- | ---------------------------------------------- |
-| `pnpm dev`          | Start server with watch (tsx)                  |
-| `pnpm start`        | Start server (tsx, no watch)                   |
-| `pnpm typecheck`    | `tsc --noEmit`                                 |
-| `pnpm test`         | `vitest run`                                   |
-| `pnpm openapi`      | Generate/refresh committed `openapi.yaml`      |
-| `pnpm client`       | Run CLI demo client against a running server   |
+| Command | Purpose |
+| --- | --- |
+| `pnpm dev` | Start the Next.js app with watch mode |
+| `pnpm build` | Build the Next.js app |
+| `pnpm start` | Start the built Next.js app |
+| `pnpm db:generate` | Generate a Drizzle migration |
+| `pnpm db:migrate` | Apply committed migrations |
+| `pnpm db:seed` | Validate and import the catalog fixture |
+| `pnpm typecheck` | Run `tsc --noEmit` |
+| `pnpm test` | Run Vitest |
+| `pnpm client` | Run the typed CLI demo against the app |
+| `pnpm dev:legacy` | Start the legacy REST service with watch mode |
+| `pnpm openapi` | Generate or refresh the legacy REST contract |
 
-Env vars: `PORT` (default 3000), `HOST` (default 0.0.0.0), `DATASET_PATH`
-(default `data/dataset.json` — swap datasets without code changes).
+Use `DATABASE_URL` for Postgres. `DATASET_PATH` selects the seed or legacy
+service fixture and defaults to `data/dataset.json`. Use a disposable
+`TEST_DATABASE_URL` for the PostgreSQL integration suite.
 
 ## Project structure
 
 ```
-data/dataset.json     # default sample dataset (swappable via DATASET_PATH)
-src/types.ts          # all domain + API types (single source of truth)
-src/dataset.ts        # zod schemas, loader, lookup indexes (by id, offer→variant→product)
-src/validate.ts       # pure cart validation logic (no fastify imports!)
-src/server.ts         # buildServer() factory: plugins, schemas, routes
-src/index.ts          # entrypoint (reads env, starts server)
-src/routes/*.ts       # route plugins per resource
-scripts/openapi.ts    # boots server, writes swagger YAML to openapi.yaml
-client/demo.ts        # CLI demo client (plain fetch, no deps)
-test/*.test.ts        # vitest suites (use buildServer + fastify.inject)
-openapi.yaml          # generated, committed — contract for the frontend team
+src/app/                 # T3 starter UI and tRPC/Auth.js route handlers
+src/server/api/          # tRPC context and routers
+src/server/auth/         # Auth.js setup
+src/server/db/           # Drizzle schema, catalog queries, seed transaction
+src/types.ts             # domain and cart types
+src/dataset.ts           # Zod fixture schema and legacy loader
+src/validate.ts          # pure cart validation logic
+src/server.ts            # legacy REST server factory
+src/routes/              # legacy REST route plugins
+drizzle/                 # committed Drizzle migrations
+data/dataset.json        # generated default catalog fixture
+client/demo.ts           # typed tRPC CLI demo
+test/                    # Vitest suites
+openapi.yaml             # committed legacy REST contract
 ```
 
-## API contract (do not deviate)
+## API contracts
+
+The tRPC router exposes `health`, `categories.list`, `categories.products`,
+`products.list`, `products.byId`, `vendors.list`, `vendors.byId`,
+`warehouses.list`, and `cart.validate`. Only `cart.validate` is a mutation.
+Apply the cart validation rate limit per operation, including inside batches.
+Preserve the existing catalog and cart response shapes.
+
+Preserve these legacy REST routes and response shapes.
 
 - `GET /health` → `{ status: "ok" }`
 - `GET /categories` → `Category[]`
@@ -59,9 +77,9 @@ openapi.yaml          # generated, committed — contract for the frontend team
 - All error bodies: `{ statusCode, error, message }` (fastify default shape).
 
 Vouchers are **never exposed via the API** (no list/detail endpoint); the only way
-to test a code is `POST /validate`. Type shapes are defined in `src/types.ts`.
+to test a code is cart validation. Type shapes are defined in `src/types.ts`.
 
-## `/validate` semantics
+## Cart validation semantics
 
 - Request: `{ items: { offerId: string; quantity: number }[]; voucherCode?: string }`.
 - Response: `{ valid, issues, shipments, totals, deliveryDays, packageCount }`
@@ -109,7 +127,8 @@ to test a code is `POST /validate`. Type shapes are defined in `src/types.ts`.
 - **Conventional Commits** (`feat:`, `fix:`, `test:`, `docs:`, `chore:`)
 - No comments in code unless necessary; strict TS, no `any`
 - Keep `src/validate.ts` pure (data in → result out) so it is unit-testable
-- Tests use `buildServer()` + `fastify.inject`, never a live network port
-  (except rate-limit test may use inject with distinct `remoteAddress`)
+- Test tRPC with its caller or Fetch adapter. Test legacy REST with Fastify
+  injection. HTTP API tests do not bind a live port.
 - After changes always run: `pnpm typecheck && pnpm test`
-- When API shape changes: regenerate `openapi.yaml` via `pnpm openapi` and commit it
+- When the legacy REST API shape changes, regenerate `openapi.yaml` with
+  `pnpm openapi` and commit it. Commit generated Drizzle migrations with schema changes.

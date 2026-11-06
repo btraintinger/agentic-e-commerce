@@ -1,30 +1,65 @@
 {
-  "name": "webshop-backend",
+  "name": "agentic-e-commerce",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
-  "packageManager": "pnpm@11.23.0",
-  "engines": {
-    "node": ">=20"
-  },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
+    "build": "next build",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "dev": "next dev --turbo",
+    "preview": "next build && next start",
+    "start": "next start",
     "typecheck": "tsc --noEmit",
+    "db:seed": "tsx scripts/seed.ts",
+    "dev:legacy": "tsx watch src/index.ts",
+    "start:legacy": "tsx src/index.ts",
     "test": "vitest run",
     "openapi": "tsx scripts/openapi.ts",
     "client": "tsx client/demo.ts"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.7.2",
+    "@t3-oss/env-nextjs": "^0.13.0",
+    "@tanstack/react-query": "^5.69.0",
+    "@trpc/client": "^11.0.0",
+    "@trpc/react-query": "^11.0.0",
+    "@trpc/server": "^11.0.0",
+    "drizzle-orm": "^0.41.0",
+    "next": "^15.2.3",
+    "next-auth": "5.0.0-beta.32",
+    "postgres": "^3.4.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
+    "superjson": "^2.2.1",
+    "zod": "^4.4.3",
     "@fastify/rate-limit": "^11.2.0",
     "@fastify/swagger": "^9.8.1",
     "@fastify/swagger-ui": "^6.1.1",
-    "fastify": "^5.12.1",
-    "zod": "^4.4.3"
+    "fastify": "^5.12.1"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0",
+    "@tailwindcss/postcss": "^4.0.15",
+    "@types/node": "^20.14.10",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "drizzle-kit": "^0.30.5",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.15",
+    "typescript": "^5.9.3",
     "tsx": "^4.23.12",
-    "typescript": "^7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "@next/env": "^15.5.29",
+    "esbuild": "^0.28.0"
+  },
+  "ct3aMetadata": {
+    "initVersion": "7.40.0"
+  },
+  "packageManager": "pnpm@11.23.0",
+  "engines": {
+    "node": ">=22.13"
   }
 }

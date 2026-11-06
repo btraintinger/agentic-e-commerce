@@ -1,0 +1,95 @@
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import { readDataset } from "~/dataset";
+import { createCaller } from "~/server/api/root";
+import * as schema from "~/server/db/schema";
+import { seedCatalog } from "~/server/db/seed-catalog";
+import { validateCart } from "~/validate";
+
+const databaseUrl = process.env.TEST_DATABASE_URL;
+
+describe.skipIf(!databaseUrl)("PostgreSQL webshop procedures", () => {
+  const connection = postgres(databaseUrl ?? "postgresql://unused:unused@127.0.0.1:1/unused");
+  const db = drizzle(connection, { schema });
+  const api = createCaller({
+    db,
+    headers: new Headers(),
+    getSession: async () => null,
+    rateLimitKey: "postgres-test",
+  });
+  const dataset = readDataset("data/dataset.json");
+
+  beforeAll(async () => {
+    await migrate(db, { migrationsFolder: "drizzle" });
+    await seedCatalog(db, dataset);
+    await seedCatalog(db, dataset);
+  });
+
+  afterAll(() => connection.end());
+
+  it("round-trips seeded catalog data and preserves ordering and optional fields", async () => {
+    const category = dataset.categories[0];
+    const product = dataset.products[0];
+    const vendor = dataset.vendors[0];
+
+    expect(await api.categories.list()).toEqual(dataset.categories);
+    expect(await api.categories.products({ id: category.id })).toEqual(
+      dataset.products.filter((p) => p.categoryId === category.id),
+    );
+    expect(await api.products.list()).toEqual(dataset.products);
+    expect(await api.products.byId({ id: product.id })).toEqual(product);
+    expect(await api.vendors.list()).toEqual(dataset.vendors);
+    expect(await api.vendors.byId({ id: vendor.id })).toEqual(vendor);
+    expect(await api.warehouses.list()).toEqual(dataset.warehouses);
+  });
+
+  it("combines case-insensitive substring search and same-offer price bounds", async () => {
+    const category = dataset.categories[0].id;
+    for (const q of ["LAPTOP", "%", "_", "\\"]) {
+      const filters = { category, q, minPrice: 1_000, maxPrice: 300_000 };
+      const expected = dataset.products.filter((product) =>
+        product.categoryId === category &&
+        [product.name, product.description, product.brand ?? "", ...product.tags]
+          .some((text) => text.toLowerCase().includes(q.toLowerCase())) &&
+        product.variants.some(({ offers }) =>
+          offers.some(({ price }) => price >= filters.minPrice && price <= filters.maxPrice),
+        ),
+      );
+      expect(await api.products.list(filters)).toEqual(expected);
+    }
+    expect(await api.products.list({ minPrice: 10_000, maxPrice: 1_000 })).toEqual([]);
+  });
+
+  it("retains not-found errors for IDs that do not occur in the catalog", async () => {
+    await expect(api.categories.products({ id: "missing" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.products.byId({ id: "missing" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.vendors.byId({ id: "missing" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("validates selected offers and vouchers with the existing cart rules", async () => {
+    const inStock = dataset.products.flatMap(({ variants }) => variants.flatMap(({ offers }) => offers))
+      .filter(({ stock }) => stock !== "NO");
+    const primary = inStock[0];
+    const second = inStock.find((offer) => offer.warehouseId !== primary.warehouseId)!;
+    const cart = {
+      items: [
+        { offerId: primary.id, quantity: 2 },
+        { offerId: second.id, quantity: 1 },
+        { offerId: "missing", quantity: 1 },
+        { offerId: second.id, quantity: 1.5 },
+      ],
+      voucherCode: "WELCOME10",
+    };
+    expect(await api.cart.validate(cart)).toEqual(validateCart(cart, dataset));
+  });
+
+  it("rolls back replacement if the selected fixture contains a broken reference", async () => {
+    const broken = structuredClone(dataset);
+    broken.products[0].categoryId = "missing";
+    await expect(seedCatalog(db, broken)).rejects.toThrow();
+    expect(await api.products.byId({ id: dataset.products[0].id })).toEqual(dataset.products[0]);
+  });
+});

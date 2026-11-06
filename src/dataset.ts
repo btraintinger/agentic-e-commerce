@@ -116,7 +116,7 @@ function buildIndexes(data: Dataset): void {
   }
 }
 
-export function loadDataset(path?: string): Dataset {
+export function readDataset(path?: string): Dataset {
   const resolvedPath = path ?? process.env.DATASET_PATH ?? "data/dataset.json";
   const raw = readFileSync(resolvedPath, "utf-8");
   const parsed: unknown = JSON.parse(raw);
@@ -126,7 +126,11 @@ export function loadDataset(path?: string): Dataset {
       `Dataset validation failed: ${result.error.message}`,
     );
   }
-  const data = result.data as Dataset;
+  return result.data;
+}
+
+export function loadDataset(path?: string): Dataset {
+  const data = readDataset(path);
   buildIndexes(data);
   cachedDataset = data;
   return data;

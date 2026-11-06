@@ -1,24 +1,12 @@
+import { createTRPCClient, httpLink } from "@trpc/client";
+import superjson from "superjson";
+
+import type { AppRouter } from "../src/server/api/root";
+
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
-
-async function getJSON(path: string): Promise<unknown> {
-  const res = await fetch(`${BASE_URL}${path}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-  return res.json() as Promise<unknown>;
-}
-
-async function postJSON(path: string, body: unknown): Promise<unknown> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-}
+const api = createTRPCClient<AppRouter>({
+  links: [httpLink({ url: `${BASE_URL.replace(/\/$/, "")}/api/trpc`, transformer: superjson })],
+});
 
 function divider() {
   console.log("─".repeat(60));
@@ -39,9 +27,9 @@ function formatCents(c: number): string {
 // Step 1 – List categories
 // ---------------------------------------------------------------------------
 async function step1() {
-  heading("1. List Categories — GET /categories");
+  heading("1. List Categories — categories.list");
   try {
-    const cats = (await getJSON("/categories")) as { name: string; id: string }[];
+    const cats = await api.categories.list.query();
     for (const c of cats) {
       console.log(`  ${c.name}`);
     }
@@ -54,11 +42,9 @@ async function step1() {
 // Step 2 – Search products for "laptop"
 // ---------------------------------------------------------------------------
 async function step2(): Promise<string | undefined> {
-  heading('2. Search Products — GET /products?q=laptop');
+  heading('2. Search Products — products.list (q: laptop)');
   try {
-    const products = (await getJSON("/products?q=laptop")) as {
-      id: string; name: string; variants: { offers: { price: number }[] }[];
-    }[];
+    const products = await api.products.list.query({ q: "laptop" });
     const top5 = products.slice(0, 5);
     for (const p of top5) {
       const prices = p.variants.flatMap((v) => v.offers.map((o) => o.price));
@@ -77,24 +63,13 @@ async function step2(): Promise<string | undefined> {
 // Step 3 – Product detail (first result from step 2)
 // ---------------------------------------------------------------------------
 async function step3(productId: string | undefined) {
-  heading("3. Product Details — GET /products/:id");
+  heading("3. Product Details — products.byId");
   if (!productId) {
     console.log("  SKIP (no product ID from step 2)");
     return;
   }
   try {
-    const p = (await getJSON(`/products/${productId}`)) as {
-      id: string; name: string; description: string; brand?: string; tags: string[];
-      variants: {
-        id: string; name: string; sku: string;
-        offers: {
-          id: string; vendorId: string; warehouseId: string;
-          price: number; shippingCost: number;
-          freeShippingThreshold?: number;
-          deliveryDays: { min: number; max: number }; stock: string;
-        }[];
-      }[];
-    };
+    const p = await api.products.byId.query({ id: productId });
     console.log(`  ${p.name}`);
     console.log(`  Brand: ${p.brand ?? "—"}`);
     console.log(`  ${p.description}`);
@@ -126,18 +101,7 @@ async function step4() {
     // Use the "Campus Clothing – Urban Jacket" or similar product with multiple
     // offers.  For deterministic behaviour we grab a known product that has
     // variants with several offers – the ThinkPad X1 Carbon Student Edition.
-    const products = (await getJSON("/products?q=ThinkPad+X1+Carbon")) as {
-      id: string; name: string;
-      variants: {
-        id: string; name: string; sku: string;
-        offers: {
-          id: string; vendorId: string; warehouseId: string;
-          price: number; shippingCost: number;
-          freeShippingThreshold?: number;
-          deliveryDays: { min: number; max: number }; stock: string;
-        }[];
-      }[];
-    }[];
+    const products = await api.products.list.query({ q: "ThinkPad X1 Carbon" });
     const tp = products[0];
     if (!tp) { console.log("  SKIP (ThinkPad not found)"); return; }
 
@@ -194,7 +158,7 @@ async function step4() {
 // Step 5 – Validate a problematic cart
 // ---------------------------------------------------------------------------
 async function step5() {
-  heading("5. Validate Cart — POST /validate (with errors)");
+  heading("5. Validate Cart — cart.validate (with errors)");
   try {
     const cart = {
       items: [
@@ -203,11 +167,7 @@ async function step5() {
         { offerId: "off-nonexistent-another", quantity: 1 },
       ],
     };
-    const data = (await postJSON("/validate", cart)) as {
-      valid: boolean; issues: { code: string; message: string; offerId?: string }[];
-      shipments: unknown[]; totals: Record<string, number>;
-      deliveryDays: { min: number; max: number } | null; packageCount: number;
-    };
+    const data = await api.cart.validate.mutate(cart);
     console.log(`  valid: ${data.valid}`);
     console.log("  issues:");
     for (const iss of data.issues) {
@@ -227,20 +187,9 @@ async function step5() {
 // Step 6 – Successful cart validation (no voucher)
 // ---------------------------------------------------------------------------
 async function step6() {
-  heading("6. Successful Cart Validation — POST /validate (no voucher)");
+  heading("6. Successful Cart Validation — cart.validate (no voucher)");
   try {
-    const products = (await getJSON("/products?q=ThinkPad+X1+Carbon")) as {
-      id: string; name: string;
-      variants: {
-        id: string; name: string;
-        offers: {
-          id: string; vendorId: string; warehouseId: string;
-          price: number; shippingCost: number;
-          freeShippingThreshold?: number;
-          deliveryDays: { min: number; max: number }; stock: string;
-        }[];
-      }[];
-    }[];
+    const products = await api.products.list.query({ q: "ThinkPad X1 Carbon" });
     const tp = products[0];
     if (!tp) { console.log("  SKIP (ThinkPad not found)"); return; }
 
@@ -258,34 +207,16 @@ async function step6() {
 
     const cart = { items: [{ offerId: offer1.id, quantity: 1 }, { offerId: offer2.id, quantity: 2 }] };
 
-    const data = (await postJSON("/validate", cart)) as {
-      valid: boolean;
-      issues: { code: string; message: string; offerId?: string }[];
-      shipments: {
-        vendorId: string; warehouseId: string;
-        items: {
-          offerId: string; productId: string; variantId: string;
-          productName: string; variantName: string;
-          quantity: number; unitPrice: number; lineTotal: number;
-        }[];
-        itemsSubtotal: number;
-        shippingCost: number;
-        packageTax: number;
-        deliveryDays: { min: number; max: number };
-      }[];
-      totals: { items: number; shipping: number; discount: number; grand: number };
-      deliveryDays: { min: number; max: number } | null;
-      packageCount: number;
-    };
+    const data = await api.cart.validate.mutate(cart);
 
     const vendorNames = new Map<string, string>();
     for (const s of data.shipments) {
       if (!vendorNames.has(s.vendorId)) {
-        const v = (await getJSON(`/vendors/${s.vendorId}`)) as { name: string };
+        const v = await api.vendors.byId.query({ id: s.vendorId });
         vendorNames.set(s.vendorId, v.name);
       }
     }
-    const allWarehouses = (await getJSON("/warehouses")) as { id: string; name: string }[];
+    const allWarehouses = await api.warehouses.list.query();
     const warehouseNames = new Map(allWarehouses.map((w) => [w.id, w.name]));
 
     console.log(`  valid: ${data.valid}`);
@@ -325,7 +256,7 @@ async function step6() {
 // Step 7 – Validate with valid voucher WELCOME10
 // ---------------------------------------------------------------------------
 async function step7() {
-  heading('7. Validate with Voucher — POST /validate (voucherCode: "WELCOME10")');
+  heading('7. Validate with Voucher — cart.validate (voucherCode: "WELCOME10")');
   try {
     const cart = {
       items: [
@@ -334,9 +265,7 @@ async function step7() {
       ],
       voucherCode: "WELCOME10",
     };
-    const data = (await postJSON("/validate", cart)) as {
-      valid: boolean; issues: unknown[]; totals: Record<string, number>;
-    };
+    const data = await api.cart.validate.mutate(cart);
     console.log(`  valid:     ${data.valid}`);
     console.log(`  issues:    ${JSON.stringify(data.issues)}`);
     console.log(
@@ -352,7 +281,7 @@ async function step7() {
 // Step 8 – Validate with expired voucher EXPIRED2024
 // ---------------------------------------------------------------------------
 async function step8() {
-  heading('8. Validate with Expired Voucher — POST /validate (voucherCode: "EXPIRED2024")');
+  heading('8. Validate with Expired Voucher — cart.validate (voucherCode: "EXPIRED2024")');
   try {
     const cart = {
       items: [
@@ -361,9 +290,7 @@ async function step8() {
       ],
       voucherCode: "EXPIRED2024",
     };
-    const data = (await postJSON("/validate", cart)) as {
-      valid: boolean; issues: { code: string; message: string }[]; totals: Record<string, number>;
-    };
+    const data = await api.cart.validate.mutate(cart);
     console.log(`  valid:  ${data.valid}`);
     console.log("  issues:");
     for (const iss of data.issues) {
