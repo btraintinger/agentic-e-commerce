@@ -43,12 +43,12 @@ export function createShoppingTools() {
       },
     }),
     searchProducts: tool({
-      description: "Find in-stock products and show product cards. Use a short literal search term or a category ID. Prices are EUR cents before shipping.",
+      description: 'Find in-stock products and show cards. Omit filters the shopper did not request. Example: for ThinkPad laptops, pass {"q":"ThinkPad"} only. Prices are EUR cents before shipping.',
       inputSchema: z.object({
         q: z.string().trim().min(1).max(100).optional().describe("One keyword, brand, or exact product name"),
-        category: z.string().trim().min(1).max(120).optional().describe("A shop category ID from listCategories"),
-        minPrice: priceInCents.optional().describe("Minimum price in EUR cents"),
-        maxPrice: priceInCents.optional().describe("Maximum price in EUR cents"),
+        category: z.string().trim().min(1).max(120).optional().describe("Only an exact category ID returned by listCategories"),
+        minPrice: priceInCents.optional().describe("Only when requested: minimum price in EUR cents"),
+        maxPrice: priceInCents.optional().describe("Only when requested: maximum price in EUR cents"),
       }),
       execute: async (filters, { abortSignal }) => {
         const { minPrice, maxPrice } = filters;
