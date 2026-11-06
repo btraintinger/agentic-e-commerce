@@ -2,7 +2,7 @@ import nextEnv from "@next/env";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { parseDataset, readDataset } from "../src/dataset";
+import { parseDataset } from "../src/dataset";
 import { seedCatalog } from "../src/server/db/seed-catalog";
 import { generateDataset, JKU_SEED } from "./generate-data.mjs";
 
@@ -12,11 +12,9 @@ async function main() {
   const connection = postgres(process.env.DATABASE_URL);
   const db = drizzle(connection);
   try {
-    const fixturePath = process.env.DATASET_PATH;
-    const dataset = fixturePath ? readDataset(fixturePath) : parseDataset(generateDataset());
-    await seedCatalog(db, dataset, { offerSeed: fixturePath ? undefined : JKU_SEED });
-    const action = fixturePath ? "Imported from fixture" : "Generated JKU catalog with Drizzle Seed";
-    console.log(`${action}: ${dataset.products.length} products and ${dataset.categories.length} categories`);
+    const dataset = parseDataset(generateDataset());
+    await seedCatalog(db, dataset, { offerSeed: JKU_SEED });
+    console.log(`Generated JKU catalog with Drizzle Seed: ${dataset.products.length} products and ${dataset.categories.length} categories`);
   } finally {
     await connection.end();
   }

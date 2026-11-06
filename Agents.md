@@ -23,13 +23,13 @@ See `README.md` for project context. The tRPC contract is `AppRouter` in
 | `pnpm start` | Start the built Next.js app |
 | `pnpm db:generate` | Generate a Drizzle migration |
 | `pnpm db:migrate` | Apply committed migrations |
-| `pnpm db:seed` | Generate the fixed-seed JKU catalog or import a selected fixture |
+| `pnpm db:seed` | Generate the fixed-seed JKU catalog |
 | `pnpm typecheck` | Run `tsc --noEmit` |
 | `pnpm test` | Run Vitest |
 | `pnpm client` | Run the typed CLI demo against the app |
 
-Use `DATABASE_URL` for Postgres. Set `DATASET_PATH` explicitly to import a
-JSON fixture. Use a disposable `TEST_DATABASE_URL` for the PostgreSQL integration suite.
+Use `DATABASE_URL` for Postgres and a disposable `TEST_DATABASE_URL` for the
+PostgreSQL integration suite.
 
 ## Project structure
 
@@ -39,7 +39,7 @@ src/server/api/          # tRPC context and routers
 src/server/auth/         # Auth.js setup
 src/server/db/           # Drizzle schema, catalog queries, seed transaction
 src/types.ts             # domain and cart types
-src/dataset.ts           # Zod fixture schema and seed reader
+src/dataset.ts           # Zod catalog validation
 src/validate.ts          # pure cart validation logic
 drizzle/                 # committed Drizzle migrations
 scripts/generate-data.mjs # fixed-seed JKU catalog generator
@@ -99,8 +99,8 @@ Voucher records stay server-side. Clients can submit a code to `cart.validate`.
 
 - Use the shared generator in `scripts/generate-data.mjs` for the base catalog
   and JSON exports. Use Drizzle Seed refinements for generated offer stock
-  and delivery, and preserve supplied values when importing JSON. Seed only
-  webshop tables and keep Auth.js and starter post data intact.
+  and delivery. Seed only webshop tables and keep Auth.js and starter post
+  data intact.
 - Keep generated catalog data out of source control. Pass an explicit output
   path to `node scripts/generate-data.mjs` when exporting JSON.
 - Curated "JKU Starter Set" products are tagged `starter-set`.

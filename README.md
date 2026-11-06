@@ -29,11 +29,8 @@ export uses the same catalog, prices, and shipping rules with the generator's
 base stock and delivery values. To export it, run
 `node scripts/generate-data.mjs /tmp/jku-catalog.json`.
 
-To import a catalog JSON file as supplied, run
-`DATASET_PATH=/path/to/catalog.json pnpm db:seed`.
-
-Both modes replace the webshop catalog and vouchers in one transaction on
-every run. Auth.js and starter post data stay intact.
+Seeding replaces the webshop catalog and vouchers in one transaction on every
+run. Auth.js and starter post data stay intact.
 
 Auth.js includes the Drizzle adapter and the starter's Discord provider. The
 webshop procedures are public and work with the Auth.js values in `.env.example`

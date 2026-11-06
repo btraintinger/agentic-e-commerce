@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { z } from "zod";
 import type { Dataset } from "./types.js";
 
@@ -83,9 +82,4 @@ export function parseDataset(input: unknown): Dataset {
     );
   }
   return result.data;
-}
-
-export function readDataset(path: string): Dataset {
-  const raw = readFileSync(path, "utf-8");
-  return parseDataset(JSON.parse(raw));
 }

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { generateDataset } from "../scripts/generate-data.mjs";
-import { parseDataset, readDataset } from "../src/dataset.js";
+import { parseDataset } from "../src/dataset.js";
 
 describe("dataset", () => {
   const dataset = parseDataset(generateDataset());
@@ -99,8 +99,10 @@ describe("generated JKU catalog", () => {
       const output = join(cwd, "generated.json");
       const explicitPath = spawnSync(process.execPath, [generator, output], { cwd, encoding: "utf8" });
       expect(explicitPath.status).toBe(0);
-      expect(readFileSync(output, "utf-8")).toBe(JSON.stringify(generateDataset(), null, 2));
-      expect(readDataset(output)).toEqual(parseDataset(generateDataset()));
+      const exported = readFileSync(output, "utf-8");
+      const dataset = generateDataset();
+      expect(exported).toBe(JSON.stringify(dataset, null, 2));
+      expect(parseDataset(JSON.parse(exported))).toEqual(parseDataset(dataset));
       expect(readdirSync(dataDir)).toEqual([]);
     } finally {
       rmSync(cwd, { recursive: true, force: true });
