@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "db:seed": "tsx scripts/seed.ts",
     "test": "vitest run",
+    "eval:shopping": "tsx test/live/runner.ts",
     "client": "tsx client/demo.ts"
   },
   "dependencies": {
@@ -52,6 +53,7 @@
     "drizzle-kit": "1.0.0-rc.5",
     "drizzle-seed": "1.0.0-rc.5",
     "esbuild": "^0.28.2",
+    "playwright-core": "1.64.1",
     "postcss": "^8.5.32",
     "shadcn": "^4.23.0",
     "tailwindcss": "^4.3.4",

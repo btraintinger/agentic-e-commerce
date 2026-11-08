@@ -109,6 +109,40 @@ TEST_DATABASE_URL=postgresql://webshop:webshop@127.0.0.1:5433/webshop_test pnpm 
 Use `pnpm db:generate` after editing the Drizzle schema and commit the generated
 migration.
 
+## Live WebLLM evaluation
+
+The 28 English scenarios in `test/live/` exercise the production shopping
+transport in headless Google Chrome with WebGPU, against the fixed-seed local
+tRPC server. Install Google Chrome on a machine with a working WebGPU adapter
+and complete the database setup above. Start the app on a fixed origin so
+Chrome can reuse the model cache:
+
+```sh
+pnpm dev --port 3005
+```
+
+In another terminal, populate a dedicated Chrome profile and run one scenario:
+
+```sh
+pnpm eval:shopping --download-model --filter thinkpad-1
+```
+
+The initial run downloads the WebLLM weights and runtime from the model
+distributors and can take several minutes. Model inference runs inside the
+browser. Later runs use the cached weights and block external page requests:
+
+```sh
+pnpm eval:shopping
+```
+
+Use `--filter TEXT` to select scenario IDs by substring, `--profile DIR` to
+reuse a dedicated profile cached on `http://127.0.0.1:3005`, and `--report FILE`
+to choose a report path. The defaults are `.webllm-eval/chrome` and
+`.webllm-eval/results.json`. Reports contain the prompts, observed tRPC calls,
+model output, and assertion results. Each run replaces its report and exits
+with status 1 if a scenario fails or the run cannot finish. These checks use
+the real model, which can vary across runs and miss expected tool calls.
+
 ## License
 
 This project is developed for educational purposes at the Institute of
