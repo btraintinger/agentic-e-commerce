@@ -79,7 +79,7 @@ function createShoppingAgent(model: WebLLMLanguageModel) {
     tools: createShoppingTools(),
     stopWhen: [isStepCount(4), hasToolCall("askQuestion")],
     maxOutputTokens: 420,
-    temperature: 0.3,
+    temperature: 0,
     providerOptions: { "web-llm": { extra_body: { enable_thinking: false } } },
     instructions: [
       "You are the JKU webshop shopping assistant. Help the user choose products, compare offers, and check cart totals.",
