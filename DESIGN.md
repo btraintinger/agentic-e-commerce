@@ -37,7 +37,7 @@ components:
 
 The shopping desk uses shadcn's neutral surfaces, familiar controls, and a blue accent. The conversation is the working surface, with a narrow side area for model status and guidance. The audience is JKU students exploring the course webshop catalog. The interface uses English and displays prices in euros with Austrian English formatting.
 
-The starter homepage retains its own visual treatment. The desk's semantic palette is owned by [desk.module.css](src/app/shop/desk.module.css). [globals.css](src/styles/globals.css) maps those variables to Tailwind utilities used by the shadcn primitives. This document mirrors the runtime values.
+The shopping desk is the homepage. Its semantic palette is owned by [desk.module.css](src/app/shop/desk.module.css). [globals.css](src/styles/globals.css) maps those variables to Tailwind utilities used by the shadcn primitives. This document mirrors the runtime values.
 
 ## Colors
 
@@ -45,7 +45,7 @@ Blue identifies primary actions and focus. Outgoing messages use the shadcn tint
 
 ## Typography
 
-Geist is shared with the starter. Use sentence case, short questions, and plain action names. Prices use tabular numerals and come from the catalog. Keep assistant prose to a comfortable measure.
+The shopping desk uses Geist. Use sentence case, short questions, and plain action names. Prices use tabular numerals and come from the catalog. Keep assistant prose to a comfortable measure.
 
 ## Layout
 

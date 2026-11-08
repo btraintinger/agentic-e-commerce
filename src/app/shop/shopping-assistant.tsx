@@ -3,7 +3,6 @@
 import { useChat } from "@ai-sdk/react";
 import {
   ArrowDownRight,
-  ArrowRight,
   ArrowUp,
   CircleAlert,
   Cpu,
@@ -12,7 +11,6 @@ import {
   ShoppingBag,
   Square,
 } from "lucide-react";
-import Link from "next/link";
 import {
   type FormEvent,
   useRef,
@@ -133,13 +131,10 @@ export function ShoppingAssistant() {
     <main className={styles.desk + " min-h-dvh bg-background text-foreground"}>
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-[75rem] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 sm:px-8">
-          <Link
-            href="/"
-            className="inline-flex min-h-10 items-center gap-2 rounded-md text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-          >
+          <span className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold">
             <ShoppingBag aria-hidden className="size-5 text-primary" />
             JKU Webshop
-          </Link>
+          </span>
           <span className="text-sm text-muted-foreground">Shopping assistant</span>
         </div>
       </header>
@@ -398,12 +393,6 @@ export function ShoppingAssistant() {
               Pick a product in the conversation to check its current offers,
               stock, and delivery estimates.
             </p>
-            <Link
-              href="/"
-              className="inline-flex min-h-9 w-fit items-center gap-2 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            >
-              Webshop home <ArrowRight aria-hidden className="size-4" />
-            </Link>
           </section>
         </aside>
       </div>

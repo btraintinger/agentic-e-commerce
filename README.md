@@ -3,7 +3,7 @@
 A read-only webshop catalog for a JKU Linz student exercise. An AI assistant can
 find products and validate a shopping cart through tRPC. Cart validation computes
 shipments, delivery estimates, shipping charges, and voucher discounts. The
-client holds the cart. The homepage is the default Create T3 App starter.
+client holds the cart. The homepage opens the shopping assistant.
 
 ## Local development
 
@@ -19,7 +19,7 @@ pnpm dev
 ```
 
 The development, start, and preview scripts bind Next.js to `127.0.0.1`. The
-starter is at `http://localhost:3000` and tRPC is at
+shopping assistant is at `http://localhost:3000` and tRPC is at
 `http://localhost:3000/api/trpc`. The app connects to Docker Postgres at
 `127.0.0.1:5433`. The Compose volume retains the database when you stop the container.
 
@@ -48,7 +48,7 @@ adapter release that supports Drizzle v1.
 
 ## Browser shopping assistant
 
-Open [the shopping assistant](http://localhost:3000/shop) in a browser with
+Open [the shopping assistant](http://localhost:3000) in a browser with
 WebGPU enabled. Use localhost during development or HTTPS when hosting the app.
 The first run downloads a quantized Qwen3 1.7B model and caches it in the
 browser. The Vercel AI SDK runs the agent on your device using
