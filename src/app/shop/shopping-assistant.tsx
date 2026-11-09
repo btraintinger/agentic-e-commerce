@@ -6,9 +6,7 @@ import {
   ArrowDownRight,
   ArrowUp,
   CircleAlert,
-  Cpu,
   LoaderCircle,
-  PackageSearch,
   ShoppingBag,
   Square,
 } from "lucide-react";
@@ -21,7 +19,6 @@ import {
 } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
-import { Badge } from "~/components/ui/badge";
 import { Bubble, BubbleContent } from "~/components/ui/bubble";
 import { Button } from "~/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "~/components/ui/field";
@@ -44,7 +41,6 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "~/components/ui/message-scroller";
-import { Separator } from "~/components/ui/separator";
 import {
   createShoppingTransport,
   type ShoppingMessage,
@@ -52,6 +48,7 @@ import {
 } from "~/lib/shopping-agent";
 
 import styles from "./desk.module.css";
+import { type CartItem, type CartOffer, ShoppingCartDrawer } from "./shopping-cart";
 import {
   isShoppingToolError,
   isStructuredShoppingResult,
@@ -80,6 +77,7 @@ const getServerModelSupport = () => null;
 export function ShoppingAssistant() {
   const [transport] = useState(createShoppingTransport);
   const [draft, setDraft] = useState("");
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [progress, setProgress] = useState<number | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const composer = useRef<HTMLTextAreaElement>(null);
@@ -111,6 +109,16 @@ export function ShoppingAssistant() {
     lastMessage?.role === "assistant" &&
     lastMessage.parts.some(isToolUIPart);
 
+  function addToCart(offer: CartOffer) {
+    setCartItems((items) =>
+      items.some((item) => item.id === offer.id)
+        ? items.map((item) =>
+            item.id === offer.id ? { ...offer, quantity: item.quantity + 1 } : item,
+          )
+        : [...items, { ...offer, quantity: 1 }],
+    );
+  }
+
   function ask(prompt: string) {
     const text = prompt.trim();
     if (canSend && text) {
@@ -131,16 +139,19 @@ export function ShoppingAssistant() {
   return (
     <main className={styles.desk + " min-h-dvh bg-background text-foreground"}>
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-[75rem] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 sm:px-8">
+        <div className="mx-auto flex max-w-[57rem] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 sm:px-8">
           <span className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold">
             <ShoppingBag aria-hidden className="size-5 text-primary" />
             JKU Webshop
           </span>
-          <span className="text-sm text-muted-foreground">Shopping assistant</span>
+          <ShoppingCartDrawer
+            items={cartItems}
+            onRemove={(id) => setCartItems((items) => items.filter((item) => item.id !== id))}
+          />
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[75rem] gap-6 px-4 py-5 sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-8">
+      <div className="mx-auto max-w-[57rem] px-4 py-5 sm:px-8 sm:py-8">
         <section
           aria-labelledby="shop-title"
           className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground"
@@ -233,6 +244,7 @@ export function ShoppingAssistant() {
                                           key={tool.toolCallId}
                                           part={tool}
                                           ask={ask}
+                                          addToCart={addToCart}
                                           canSend={canSend}
                                           isLatest={isLatest}
                                         />
@@ -246,11 +258,11 @@ export function ShoppingAssistant() {
                       );
                     })
                   )}
-                  {busy && !hasAssistantOutput && (
+                  {busy && !loadingModel && !hasAssistantOutput && (
                     <MessageScrollerItem>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <LoaderCircle aria-hidden className="size-4 motion-safe:animate-spin" />
-                        {loadingModel ? "Preparing the local model…" : "Preparing a reply…"}
+                        Preparing a reply…
                       </div>
                     </MessageScrollerItem>
                   )}
@@ -262,6 +274,12 @@ export function ShoppingAssistant() {
 
           <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:px-8">
             <span className="sr-only" role="status">{announcement}</span>
+            {loadingModel && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <LoaderCircle aria-hidden className="size-4 motion-safe:animate-spin" />
+                <span>Preparing the local model…{progress !== null && ` ${progress}%`}</span>
+              </div>
+            )}
             {modelSupported === false && (
               <Alert variant="destructive">
                 <CircleAlert aria-hidden />
@@ -357,48 +375,6 @@ export function ShoppingAssistant() {
             </p>
           </div>
         </section>
-
-        <aside aria-labelledby="local-model-title" className="flex min-w-0 flex-col gap-4 self-start rounded-xl border border-border bg-card p-4 text-card-foreground">
-          <section className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-2">
-              <h2 id="local-model-title" className="flex items-center gap-2 text-sm font-semibold">
-                <Cpu aria-hidden className="size-4 text-primary" />
-                Local model
-              </h2>
-              <Badge variant="secondary">
-                {modelSupported === false ? "Unavailable" : ready ? "Ready" : loadingModel ? "Loading" : "WebLLM"}
-              </Badge>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              The AI runs on this device. Product and offer searches use the
-              webshop API.
-            </p>
-            {loadingModel && (
-              <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-                <label htmlFor="model-progress">
-                  {progress === null ? "Starting model setup" : `Preparing model · ${progress}%`}
-                </label>
-                <progress
-                  id="model-progress"
-                  className="h-2 w-full accent-primary"
-                  max={100}
-                  value={progress ?? undefined}
-                />
-              </div>
-            )}
-          </section>
-          <Separator />
-          <section className="flex flex-col gap-2">
-            <h2 className="flex items-center gap-2 text-sm font-semibold">
-              <PackageSearch aria-hidden className="size-4 text-muted-foreground" />
-              Catalog results
-            </h2>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Pick a product in the conversation to check its current offers,
-              stock, and delivery estimates.
-            </p>
-          </section>
-        </aside>
       </div>
     </main>
   );

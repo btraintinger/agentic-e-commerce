@@ -35,13 +35,13 @@ components:
 
 ## Overview
 
-The shopping desk uses shadcn's neutral surfaces, familiar controls, and a blue accent. The conversation is the working surface, with a narrow side area for model status and guidance. The audience is JKU students exploring the course webshop catalog. The interface uses English and displays prices in euros with Austrian English formatting.
+The shopping desk uses shadcn's neutral surfaces, familiar controls, and a blue accent. The conversation is the working surface, with the cart available in a drawer from the header. The audience is JKU students exploring the course webshop catalog. The interface uses English and displays prices in euros with Austrian English formatting.
 
 The shopping desk is the homepage. Its semantic palette is owned by [desk.module.css](src/app/shop/desk.module.css). [globals.css](src/styles/globals.css) maps those variables to Tailwind utilities used by the shadcn primitives. This document mirrors the runtime values.
 
 ## Colors
 
-Blue identifies primary actions and focus. Outgoing messages use the shadcn tinted bubble variant. White conversation and status surfaces sit on a zinc canvas with quiet borders. Labels explain status alongside color. Errors use the destructive role with readable recovery text.
+Blue identifies primary actions and focus. Outgoing messages use the shadcn tinted bubble variant. White conversation and cart surfaces sit on a zinc canvas with quiet borders. Labels explain status alongside color. Errors use the destructive role with readable recovery text.
 
 ## Typography
 
@@ -49,8 +49,8 @@ The shopping desk uses Geist. Use sentence case, short questions, and plain acti
 
 ## Layout
 
-The desk has one bounded, scrollable conversation above the composer. The welcome prompt sits within the conversation and starter buttons wrap below it. On narrow screens, model guidance follows the workspace. Use borders to separate working surfaces, a 0.75rem container radius, and visible keyboard focus.
+The desk has one bounded, scrollable conversation above the composer. The welcome prompt sits within the conversation and starter buttons wrap below it. The cart opens from the right and fills narrow screens. Its item list scrolls between the title and subtotal. Use borders to separate working surfaces, a 0.75rem container radius, and visible keyboard focus.
 
 ## Components
 
-Shadcn owns conversation scrolling, messages, prompt controls, status badges, alerts, and cards. Tool results render as structured product or offer lists. An action names the selected product for assistive technology. Quick answers appear with their question, and the free-text composer remains available during the conversation. Model progress and errors are visible in the desk. Spinner animation respects reduced-motion preferences.
+Shadcn owns conversation scrolling, messages, prompt controls, status badges, alerts, cards, and the modal cart sheet. Tool results render as structured product or offer lists. An action names the selected product for assistive technology. Quick answers appear with their question, and the free-text composer remains available during the conversation. Model progress and errors are visible in the desk. Spinner animation respects reduced-motion preferences.

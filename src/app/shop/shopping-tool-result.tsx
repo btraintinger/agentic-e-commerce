@@ -13,20 +13,14 @@ import {
 import type { ShoppingMessage } from "~/lib/shopping-agent";
 import type { StockLevel } from "~/types";
 
-const euro = new Intl.NumberFormat("en-AT", {
-  style: "currency",
-  currency: "EUR",
-});
+import type { CartOffer } from "./shopping-cart";
+import { price } from "./shopping-price";
 
 const stockLabels: Record<StockLevel, string> = {
   NO: "Out of stock",
   LITTLE: "Low stock",
   ALOT: "In stock",
 };
-
-function price(cents: number) {
-  return euro.format(cents / 100);
-}
 
 function delivery({ min, max }: { min: number; max: number }) {
   if (min !== max) return `${min}–${max} days`;
@@ -50,11 +44,13 @@ export function isShoppingToolError(part: ShoppingMessage["parts"][number]) {
 export function ShoppingToolResult({
   part,
   ask,
+  addToCart,
   canSend,
   isLatest,
 }: {
   part: ShoppingMessage["parts"][number];
   ask: (prompt: string) => void;
+  addToCart: (offer: CartOffer) => void;
   canSend: boolean;
   isLatest: boolean;
 }) {
@@ -157,6 +153,23 @@ export function ShoppingToolResult({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium tabular-nums">{price(offer.price)}</span>
                     <Badge variant="secondary">{stockLabels[offer.stock]}</Badge>
+                    {offer.stock !== "NO" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="min-h-9"
+                        aria-label={`Add to cart: ${product.name}, ${offer.variant}, from ${offer.vendor}, ${price(offer.price)}`}
+                        onClick={() => addToCart({
+                          id: offer.id,
+                          productName: product.name,
+                          variant: offer.variant,
+                          vendor: offer.vendor,
+                          price: offer.price,
+                        })}
+                      >
+                        Add to cart
+                      </Button>
+                    )}
                   </div>
                 </li>
               ))}
