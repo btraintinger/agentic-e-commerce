@@ -1,6 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { isToolUIPart } from "ai";
 import {
   ArrowDownRight,
   ArrowUp,
@@ -12,6 +13,7 @@ import {
   Square,
 } from "lucide-react";
 import {
+  Fragment,
   type FormEvent,
   useRef,
   useState,
@@ -55,6 +57,7 @@ import {
   isStructuredShoppingResult,
   ShoppingToolResult,
 } from "./shopping-tool-result";
+import { groupShoppingParts, ShoppingToolTrace } from "./shopping-tool-trace";
 
 const startingPoints = [
   {
@@ -106,9 +109,7 @@ export function ShoppingAssistant() {
   const lastMessage = messages.at(-1);
   const hasAssistantOutput =
     lastMessage?.role === "assistant" &&
-    lastMessage.parts.some(
-      (part) => isStructuredShoppingResult(part) || isShoppingToolError(part),
-    );
+    lastMessage.parts.some(isToolUIPart);
 
   function ask(prompt: string) {
     const text = prompt.trim();
@@ -193,11 +194,7 @@ export function ShoppingAssistant() {
                       const isLatest = message.id === lastMessage?.id;
                       const showText = message.role === "user" ||
                         (!(busy && isLatest) && !message.parts.some(isStructuredShoppingResult));
-                      const visibleParts = message.parts.filter((part) =>
-                        part.type === "text"
-                          ? showText && part.text.trim()
-                          : isStructuredShoppingResult(part) || isShoppingToolError(part),
-                      );
+                      const visibleParts = groupShoppingParts(message.parts, showText);
                       if (visibleParts.length === 0) return null;
 
                       return (
@@ -212,7 +209,7 @@ export function ShoppingAssistant() {
                                 {message.role === "user" ? "You" : "Shopping assistant"}
                               </MessageHeader>
                               {visibleParts.map((part, index) => {
-                                if (part.type === "text") {
+                                if (!Array.isArray(part)) {
                                   const body = (
                                     <p className="max-w-[68ch] whitespace-pre-wrap wrap-anywhere">
                                       {part.text}
@@ -227,13 +224,20 @@ export function ShoppingAssistant() {
                                   );
                                 }
                                 return (
-                                  <ShoppingToolResult
-                                    key={index}
-                                    part={part}
-                                    ask={ask}
-                                    canSend={canSend}
-                                    isLatest={isLatest}
-                                  />
+                                  <Fragment key={part[0].toolCallId}>
+                                    <ShoppingToolTrace parts={part} running={busy && isLatest} />
+                                    {part
+                                      .filter((tool) => isStructuredShoppingResult(tool) || isShoppingToolError(tool))
+                                      .map((tool) => (
+                                        <ShoppingToolResult
+                                          key={tool.toolCallId}
+                                          part={tool}
+                                          ask={ask}
+                                          canSend={canSend}
+                                          isLatest={isLatest}
+                                        />
+                                      ))}
+                                  </Fragment>
                                 );
                               })}
                             </MessageContent>
