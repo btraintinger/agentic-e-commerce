@@ -1,10 +1,10 @@
-import { createTRPCClient, httpLink, TRPCClientError } from "@trpc/client";
+import { TRPCClientError } from "@trpc/client";
 import { tool } from "ai";
-import superjson from "superjson";
 import { z } from "zod";
 
-import type { AppRouter } from "~/server/api/root";
 import type { Product } from "~/types";
+
+import { createWebshopClient } from "./webshop-client";
 
 const resultLimit = 4;
 const priceInCents = z.number().int().nonnegative();
@@ -28,9 +28,7 @@ function catalogError(error: unknown) {
 export class ShoppingError extends Error {}
 
 export function createShoppingTools() {
-  const api = createTRPCClient<AppRouter>({
-    links: [httpLink({ url: "/api/trpc", transformer: superjson })],
-  });
+  const api = createWebshopClient();
 
   return {
     listCategories: tool({
