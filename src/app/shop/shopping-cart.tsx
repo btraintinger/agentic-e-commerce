@@ -5,6 +5,7 @@ import { type FormEvent, useEffect, useMemo, useReducer, useRef, useState } from
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "~/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import {
@@ -20,7 +21,6 @@ import {
 import { createWebshopClient } from "~/lib/webshop-client";
 import type { CartIssueCode, ValidateResponse } from "~/types";
 
-import styles from "./desk.module.css";
 import { price } from "./shopping-price";
 
 export type CartOffer = {
@@ -158,65 +158,73 @@ export function ShoppingCartDrawer({
       <span className="sr-only" role="status">{countLabel} in your cart.</span>
       <SheetContent
         showCloseButton={false}
-        className={`${styles.desk} gap-0 bg-card text-card-foreground shadow-none data-[side=right]:w-full data-[side=right]:sm:max-w-none data-[side=right]:md:max-w-md`}
+        className="gap-0 bg-background text-foreground shadow-none data-[side=right]:w-full data-[side=right]:sm:max-w-none data-[side=right]:md:max-w-md"
       >
-        <SheetHeader className="shrink-0 flex-row items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
+        <SheetHeader className="shrink-0 flex-row items-start justify-between gap-4 border-b border-border bg-secondary px-5 py-4 sm:px-6">
           <div className="flex flex-col gap-1">
-            <SheetTitle>Your cart</SheetTitle>
+            <SheetTitle className="text-lg font-semibold">Your cart</SheetTitle>
             <SheetDescription>{countLabel}</SheetDescription>
           </div>
           <SheetClose asChild>
-            <Button type="button" variant="ghost" size="icon" className="size-10" aria-label="Close cart">
+            <Button type="button" variant="outline" size="icon" className="size-10" aria-label="Close cart">
               <X aria-hidden />
             </Button>
           </SheetClose>
         </SheetHeader>
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
           {items.length === 0 ? (
-            <div className="flex flex-col gap-1 px-5 py-6 sm:px-6">
-              <p className="font-medium">Your cart is empty.</p>
-              <p className="text-sm text-muted-foreground">Select Add to cart on an offer to put it here.</p>
+            <div className="px-5 py-5 sm:px-6">
+              <Card>
+                <CardHeader>
+                  <p className="font-semibold">Your cart is empty.</p>
+                  <CardDescription>Select Add to cart on an offer to put it here.</CardDescription>
+                </CardHeader>
+              </Card>
             </div>
           ) : (
             <>
-              <ul className="divide-y divide-border px-5 sm:px-6">
+              <ul className="grid gap-3 px-5 py-5 sm:px-6">
                 {items.map((item) => {
                   const unitPrice = quotedItems.get(item.id)?.unitPrice ?? item.price;
                   const issue = itemIssues.get(item.id);
                   return (
-                    <li key={item.id} className="flex flex-col gap-2 py-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <h3 className="text-sm font-semibold wrap-anywhere">{item.productName}</h3>
-                        {!issue && (
-                          <p className="shrink-0 text-sm font-semibold tabular-nums">{price(unitPrice * item.quantity)}</p>
+                    <li key={item.id} className="min-w-0">
+                      <Card size="sm">
+                        <CardHeader>
+                          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+                            <h3 className="min-w-0 flex-1 font-semibold wrap-anywhere">{item.productName}</h3>
+                            {!issue && (
+                              <p className="shrink-0 font-semibold tabular-nums">{price(unitPrice * item.quantity)}</p>
+                            )}
+                          </div>
+                          <CardDescription className="wrap-anywhere">{item.variant} · {item.vendor}</CardDescription>
+                        </CardHeader>
+                        {issue && (
+                          <CardContent className="text-destructive">
+                            {issue === "OUT_OF_STOCK" ? "This quantity is unavailable." : "This offer is unavailable."}
+                          </CardContent>
                         )}
-                      </div>
-                      <p className="text-sm text-muted-foreground wrap-anywhere">{item.variant} · {item.vendor}</p>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm text-muted-foreground tabular-nums">
-                          Qty {item.quantity}{!issue && ` · ${price(unitPrice)} each`}
-                        </p>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="min-h-9"
-                          aria-label={`Remove ${item.productName}, ${item.variant}, from ${item.vendor}`}
-                          onClick={() => onRemove(item.id)}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                      {issue && (
-                        <p className="text-sm text-destructive">
-                          {issue === "OUT_OF_STOCK" ? "This quantity is unavailable." : "This offer is unavailable."}
-                        </p>
-                      )}
+                        <CardFooter className="flex-wrap justify-between gap-2">
+                          <p className="text-muted-foreground tabular-nums">
+                            Qty {item.quantity}{!issue && ` · ${price(unitPrice)} each`}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="min-h-9"
+                            aria-label={`Remove ${item.productName}, ${item.variant}, from ${item.vendor}`}
+                            onClick={() => onRemove(item.id)}
+                          >
+                            Remove
+                          </Button>
+                        </CardFooter>
+                      </Card>
                     </li>
                   );
                 })}
               </ul>
-              <SheetFooter className="shrink-0 gap-4 border-t border-border px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+              <SheetFooter className="shrink-0 gap-4 border-t border-border bg-card px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
                 <form noValidate onSubmit={applyVoucher}>
                   <FieldGroup>
                     <Field data-invalid={Boolean(voucherError && nextVoucher === voucherCode)}>

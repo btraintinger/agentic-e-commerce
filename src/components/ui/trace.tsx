@@ -73,7 +73,7 @@ function TraceDescription({
     <span
       data-slot="trace-description"
       className={cn(
-        "shrink-0 text-muted-foreground/70 tabular-nums",
+        "shrink-0 text-muted-foreground tabular-nums",
         className
       )}
       {...props}
@@ -140,7 +140,7 @@ function TraceCollapsibleContent({
       <div
         data-slot="trace-collapsible-content-inner"
         className={cn(
-          "mt-2 mb-1 ml-[calc(--spacing(2)-1px)] min-w-0 border-l pr-1 pl-4 leading-relaxed wrap-break-word text-muted-foreground",
+          "mt-2 mb-1 ml-[calc(--spacing(2)-1px)] min-w-0 border-l border-border pr-1 pl-4 leading-relaxed wrap-break-word text-muted-foreground",
           className
         )}
       >

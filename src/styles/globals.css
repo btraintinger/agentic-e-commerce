@@ -9,7 +9,10 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--card-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -21,4 +24,61 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #17191f;
+  --card: #ffffff;
+  --card-foreground: var(--foreground);
+  --primary: #194dbb;
+  --primary-hover: #133c93;
+  --primary-foreground: #ffffff;
+  --secondary: var(--card);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--card);
+  --muted-foreground: #4f5664;
+  --accent: #e5efff;
+  --accent-foreground: var(--primary);
+  --border: #738fb5;
+  --input: #5279b2;
+  --ring: var(--primary);
+  --destructive: #9d233b;
+  --success: #14604a;
+  --warning: #744600;
+  --radius: 0.75rem;
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  textarea {
+    caret-color: var(--primary);
+  }
+
+  [data-slot="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html,
+  * {
+    scrollbar-color: var(--input) transparent;
+  }
+
+  @media (forced-colors: active) {
+    html,
+    * {
+      scrollbar-color: auto;
+    }
+  }
 }

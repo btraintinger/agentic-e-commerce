@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
@@ -16,11 +17,16 @@ import type { StockLevel } from "~/types";
 import type { CartOffer } from "./shopping-cart";
 import { price } from "./shopping-price";
 
-const stockLabels: Record<StockLevel, string> = {
-  NO: "Out of stock",
-  LITTLE: "Low stock",
-  ALOT: "In stock",
-};
+const stockStatus = {
+  NO: { label: "Out of stock", variant: "destructive" },
+  LITTLE: { label: "Low stock", variant: "warning" },
+  ALOT: { label: "In stock", variant: "success" },
+} as const satisfies Record<StockLevel, { label: string; variant: string }>;
+
+function StockBadge({ stock }: { stock: StockLevel }) {
+  const { label, variant } = stockStatus[stock];
+  return <Badge variant={variant}>{label}</Badge>;
+}
 
 function delivery({ min, max }: { min: number; max: number }) {
   if (min !== max) return `${min}–${max} days`;
@@ -68,54 +74,53 @@ export function ShoppingToolResult({
     const { products, total } = part.output;
 
     return (
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle>{total === 1 ? "1 catalog match" : `${total} catalog matches`}</CardTitle>
-          <CardDescription>
+      <section className="@container grid min-w-0 gap-3">
+        <header className="grid gap-1">
+          <h2 className="text-lg leading-snug font-semibold">{total === 1 ? "1 catalog match" : `${total} catalog matches`}</h2>
+          <p className="max-w-[68ch] text-sm text-muted-foreground">
             {total === 0
               ? "Try a broader search or a different price range."
               : total > products.length
                 ? `Showing the first ${products.length}. Pick a product to see its offers.`
                 : "Pick a product to see its offers."}
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </header>
         {products.length > 0 && (
-          <CardContent>
-            <ul className="divide-y divide-border border-y border-border">
-              {products.map((product) => (
-                <li
-                  key={product.id}
-                  className="grid min-w-0 items-center gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4"
-                >
-                  <div className="min-w-0">
-                    <h3 className="text-sm leading-snug font-medium wrap-anywhere">{product.name}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground wrap-anywhere">
+          <ul className="grid gap-3 @lg:grid-cols-2">
+            {products.map((product) => (
+              <li key={product.id} className="min-w-0">
+                <Card className="h-full">
+                  <CardHeader>
+                    <h3 className="text-base leading-snug font-semibold wrap-anywhere">{product.name}</h3>
+                    <CardDescription className="leading-relaxed wrap-anywhere">
                       {product.description}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-medium tabular-nums">From {price(product.price)}</span>
-                      <Badge variant="secondary">{stockLabels[product.stock]}</Badge>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="min-h-9 w-fit"
-                    disabled={!canSend}
-                    aria-label={`See offers for ${product.name}`}
-                    onClick={() =>
-                      ask(`Show offers for ${product.name} (product ID ${product.id}).`)
-                    }
-                  >
-                    See offers <ArrowRight aria-hidden data-icon="inline-end" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-wrap items-center gap-2">
+                    <StockBadge stock={product.stock} />
+                  </CardContent>
+                  <CardFooter className="mt-auto flex-wrap justify-between gap-2">
+                    <span className="font-semibold tabular-nums">From {price(product.price)}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="min-h-10"
+                      disabled={!canSend}
+                      aria-label={`See offers for ${product.name}`}
+                      onClick={() =>
+                        ask(`Show offers for ${product.name} (product ID ${product.id}).`)
+                      }
+                    >
+                      See offers <ArrowRight aria-hidden data-icon="inline-end" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </li>
+            ))}
+          </ul>
         )}
-      </Card>
+      </section>
     );
   }
 
@@ -123,60 +128,67 @@ export function ShoppingToolResult({
     const { product, offers } = part.output;
 
     return (
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle>{product.name}</CardTitle>
-          <CardDescription>
+      <section className="@container grid min-w-0 gap-3">
+        <header className="grid gap-1">
+          <h2 className="text-lg leading-snug font-semibold wrap-anywhere">{product.name}</h2>
+          <p className="max-w-[68ch] text-sm text-muted-foreground">
             {offers.length
               ? "Offer prices exclude shipping charges and any package tax."
               : "There are currently no offers for this product."}
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </header>
         {offers.length > 0 && (
-          <CardContent>
-            <ul className="divide-y divide-border border-y border-border">
-              {offers.map((offer) => (
-                <li key={offer.id} className="flex flex-wrap justify-between gap-x-4 gap-y-2 py-3">
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-medium wrap-anywhere">{offer.variant}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground wrap-anywhere">
+          <ul className="grid gap-3 @lg:grid-cols-2">
+            {offers.map((offer) => (
+              <li key={offer.id} className="min-w-0">
+                <Card className="h-full">
+                  <CardHeader>
+                    <h3 className="text-base leading-snug font-semibold wrap-anywhere">{offer.variant}</h3>
+                    <CardDescription className="wrap-anywhere">
                       {offer.vendor} · {delivery(offer.deliveryDays)}
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-sm leading-relaxed text-muted-foreground">
+                    <p>
                       {offer.shippingCost === 0
                         ? "Free shipping"
                         : `${price(offer.shippingCost)} shipping per item`}
-                      {offer.freeShippingThreshold !== undefined &&
-                        ` · Free shipping from ${price(offer.freeShippingThreshold)} per shipment`}
                     </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium tabular-nums">{price(offer.price)}</span>
-                    <Badge variant="secondary">{stockLabels[offer.stock]}</Badge>
-                    {offer.stock !== "NO" && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="min-h-9"
-                        aria-label={`Add to cart: ${product.name}, ${offer.variant}, from ${offer.vendor}, ${price(offer.price)}`}
-                        onClick={() => addToCart({
-                          id: offer.id,
-                          productName: product.name,
-                          variant: offer.variant,
-                          vendor: offer.vendor,
-                          price: offer.price,
-                        })}
-                      >
-                        Add to cart
-                      </Button>
+                    {offer.freeShippingThreshold !== undefined && (
+                      <p>Free shipping from {price(offer.freeShippingThreshold)} per shipment</p>
                     )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
+                  </CardContent>
+                  <CardFooter className="mt-auto flex-col items-stretch gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xl leading-tight font-semibold tabular-nums">{price(offer.price)}</span>
+                      <StockBadge stock={offer.stock} />
+                    </div>
+                    {offer.stock !== "NO" && (
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="min-h-10"
+                          aria-label={`Add to cart: ${product.name}, ${offer.variant}, from ${offer.vendor}, ${price(offer.price)}`}
+                          onClick={() => addToCart({
+                            id: offer.id,
+                            productName: product.name,
+                            variant: offer.variant,
+                            vendor: offer.vendor,
+                            price: offer.price,
+                          })}
+                        >
+                          Add to cart
+                        </Button>
+                      </div>
+                    )}
+                  </CardFooter>
+                </Card>
+              </li>
+            ))}
+          </ul>
         )}
-      </Card>
+      </section>
     );
   }
 

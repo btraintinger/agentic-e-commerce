@@ -47,7 +47,6 @@ import {
   supportsShoppingModel,
 } from "~/lib/shopping-agent";
 
-import styles from "./desk.module.css";
 import { type CartItem, type CartOffer, ShoppingCartDrawer } from "./shopping-cart";
 import {
   isShoppingToolError,
@@ -137,11 +136,13 @@ export function ShoppingAssistant() {
   }
 
   return (
-    <main className={styles.desk + " min-h-dvh bg-background text-foreground"}>
+    <main className="min-h-dvh">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-[57rem] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 sm:px-8">
-          <span className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold">
-            <ShoppingBag aria-hidden className="size-5 text-primary" />
+          <span className="inline-flex min-h-10 items-center gap-2.5 text-sm font-semibold">
+            <span className="grid size-9 place-items-center rounded-lg border border-input text-primary">
+              <ShoppingBag aria-hidden className="size-5" />
+            </span>
             JKU Webshop
           </span>
           <ShoppingCartDrawer
@@ -156,8 +157,8 @@ export function ShoppingAssistant() {
           aria-labelledby="shop-title"
           className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground"
         >
-          <div className="border-b border-border px-5 py-4 sm:px-8">
-            <h1 id="shop-title" className="text-base font-semibold">
+          <div className="border-b border-border bg-secondary px-4 py-4 sm:px-8">
+            <h1 id="shop-title" className="text-base font-semibold tracking-tight">
               Campus shopping desk
             </h1>
           </div>
@@ -165,7 +166,7 @@ export function ShoppingAssistant() {
           <MessageScrollerProvider autoScroll defaultScrollPosition="start">
             <MessageScroller className="relative h-[clamp(22rem,56dvh,44rem)] min-w-0">
               <MessageScrollerViewport className="h-full" aria-label="Conversation">
-                <MessageScrollerContent aria-live="off" className="gap-6 px-5 py-6 sm:px-8 sm:py-8">
+                <MessageScrollerContent aria-live="off" className="gap-6 px-4 py-6 sm:px-8 sm:py-8">
                   {messages.length === 0 ? (
                     <MessageScrollerItem className="my-auto">
                       <div className="flex flex-col gap-6">
@@ -188,7 +189,7 @@ export function ShoppingAssistant() {
                                 key={label}
                                 variant="outline"
                                 size="sm"
-                                className="min-h-9 max-w-full"
+                                className="h-auto min-h-10 max-w-full whitespace-normal"
                                 disabled={!canSend}
                                 onClick={() => ask(prompt)}
                               >
@@ -272,7 +273,7 @@ export function ShoppingAssistant() {
             </MessageScroller>
           </MessageScrollerProvider>
 
-          <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:px-8">
+          <div className="flex flex-col gap-3 border-t border-border bg-muted px-4 py-4 sm:px-8">
             <span className="sr-only" role="status">{announcement}</span>
             {loadingModel && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -318,7 +319,7 @@ export function ShoppingAssistant() {
                   <FieldLabel className="sr-only" htmlFor="shopping-prompt">
                     Ask about a product
                   </FieldLabel>
-                  <InputGroup>
+                  <InputGroup className="bg-card">
                     <InputGroupTextarea
                       id="shopping-prompt"
                       ref={composer}
