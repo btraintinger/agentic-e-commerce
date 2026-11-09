@@ -18,7 +18,10 @@ import {
 
 import { createShoppingTools, ShoppingError } from "./shopping-tools";
 
-const modelId = "Qwen3-1.7B-q4f16_1-MLC";
+export const shoppingModel = {
+  id: "Qwen3-1.7B-q4f16_1-MLC",
+  label: "Qwen3 1.7B",
+} as const;
 const unsupportedMessage = "A browser and device with WebGPU are required for this local model.";
 
 export type ShoppingMessage = UIMessage<unknown, { modelProgress: { progress: number } },
@@ -35,7 +38,7 @@ export function supportsShoppingModel() {
 
 async function initializeModel() {
   const { webLLM } = await import("@browser-ai/web-llm");
-  const model = webLLM(modelId);
+  const model = webLLM(shoppingModel.id);
   const ready = await model.createSessionWithProgress((fraction) => {
     progress = Math.max(0, Math.min(0.99, fraction));
     for (const listener of progressListeners) listener(progress);

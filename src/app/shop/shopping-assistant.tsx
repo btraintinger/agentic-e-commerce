@@ -5,6 +5,7 @@ import { isToolUIPart } from "ai";
 import {
   ArrowDownRight,
   ArrowUp,
+  ChevronDown,
   CircleAlert,
   LoaderCircle,
   ShoppingBag,
@@ -21,6 +22,15 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Bubble, BubbleContent } from "~/components/ui/bubble";
 import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { Field, FieldGroup, FieldLabel } from "~/components/ui/field";
 import {
   InputGroup,
@@ -43,6 +53,7 @@ import {
 } from "~/components/ui/message-scroller";
 import {
   createShoppingTransport,
+  shoppingModel,
   type ShoppingMessage,
   supportsShoppingModel,
 } from "~/lib/shopping-agent";
@@ -319,7 +330,7 @@ export function ShoppingAssistant() {
                   <FieldLabel className="sr-only" htmlFor="shopping-prompt">
                     Ask about a product
                   </FieldLabel>
-                  <InputGroup className="bg-card">
+                  <InputGroup>
                     <InputGroupTextarea
                       id="shopping-prompt"
                       ref={composer}
@@ -342,7 +353,26 @@ export function ShoppingAssistant() {
                         }
                       }}
                     />
-                    <InputGroupAddon align="block-end" className="justify-end">
+                    <InputGroupAddon align="block-end" className="flex-wrap justify-between border-t border-border">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          aria-label={`Local model, ${shoppingModel.label}`}
+                          render={<InputGroupButton size="sm" variant="outline" className="min-h-10" />}
+                        >
+                          {shoppingModel.label}
+                          <ChevronDown aria-hidden data-icon="inline-end" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" side="top">
+                          <DropdownMenuRadioGroup value={shoppingModel.id}>
+                            <DropdownMenuGroup>
+                              <DropdownMenuLabel>Local model</DropdownMenuLabel>
+                              <DropdownMenuRadioItem value={shoppingModel.id} closeOnClick>
+                                {shoppingModel.label}
+                              </DropdownMenuRadioItem>
+                            </DropdownMenuGroup>
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       {busy ? (
                         <InputGroupButton
                           type="button"

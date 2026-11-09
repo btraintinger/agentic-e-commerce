@@ -57,4 +57,4 @@ The desk has one bounded, scrollable conversation above the composer. The welcom
 
 ## Components
 
-Shadcn owns conversation scrolling, messages, prompt controls, status badges, alerts, cards, and the modal cart sheet. Product and offer results and cart items use the shared Card primitive. An action names the selected product for assistive technology. Quick answers appear with their question, and the free-text composer remains available during the conversation. Model progress and errors are visible in the desk. Spinner animation respects reduced-motion preferences.
+Shadcn owns conversation scrolling, messages, prompt controls, status badges, alerts, cards, and the modal cart sheet. Product and offer results and cart items use the shared Card primitive. An action names the selected product for assistive technology. Quick answers appear with their question. The composer stays white in idle, focus, and disabled states. Its lower toolbar pairs the local model picker with the Send or Stop button. The picker shows the Qwen3 model used by the desk. Model progress and errors are visible in the desk. Spinner animation respects reduced-motion preferences.
