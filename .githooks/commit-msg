@@ -1,0 +1,28 @@
+#!/bin/sh
+# Validates each commit message. Expected format:
+#   Your message, refs #12 | time: 1h30m
+# Requires an issue reference (#<number>) and a time tag at the end
+# (| time: XhYm, hours and/or minutes).
+# Merge and revert commits and commits that only change TIME_TRACKING.md
+# are exempt.
+if grep -qE '^(Merge|Revert)' "$1"; then
+  exit 0
+fi
+
+# Skip validation for commits that only change TIME_TRACKING.md.
+if [ "$(git diff --cached --name-only)" = "TIME_TRACKING.md" ]; then
+  exit 0
+fi
+
+# Require an issue reference.
+if ! grep -qE '#[0-9]+' "$1"; then
+  echo "❌ Commit rejected: Missing issue reference."
+  echo "   Format: Your message, refs #12 | time: 1h30m"
+  exit 1
+fi
+
+if ! grep -qE '\| time: ([0-9]+h([0-9]+m)?|[0-9]+m)[[:space:]]*$' "$1"; then
+  echo "❌ Commit rejected: Missing time tag."
+  echo "   Format: Your message, refs #12 | time: 1h30m"
+  exit 1
+fi
