@@ -1,0 +1,19 @@
+name: PR-Checks
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  issue-referenz:
+    name: Check issue reference
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the pull request description for an issue reference
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if ! printf '%s' "$BODY" | grep -qE '#[0-9]+'; then
+            echo "::error::The pull request description must reference an issue (for example, Refs #N or Closes #N)."
+            exit 1
+          fi

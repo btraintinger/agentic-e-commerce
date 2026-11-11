@@ -1,0 +1,51 @@
+name: Task or feature
+description: Plan a feature, design task, documentation update, or project improvement.
+title: "US-XX Text"
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Describe the problem to solve or the result to achieve, and why it matters. Also add a User Story here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: List only the work included in this issue. Put exclusions and later work in Not in scope.
+      placeholder: |
+        - Work to complete
+    validations:
+      required: true
+
+  - type: textarea
+    id: not_in_scope
+    attributes:
+      label: Not in scope
+      description: Explicitly list excluded work and later-release behaviour. Reference the owning story IDs where available. Exclusions must not contradict Scope or Acceptance criteria.
+      placeholder: |
+        - Later work and its owning story
+        - Related behaviour deliberately excluded from this issue
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: Define observable results that let the team verify this issue is complete.
+      placeholder: |
+        - [ ] First verifiable result
+        - [ ] Second verifiable result
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add related issues, dependencies, Figma links or screenshots.
+    validations:
+      required: false
