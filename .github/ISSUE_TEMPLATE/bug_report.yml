@@ -1,0 +1,41 @@
+name: Bug report
+description: Report unexpected behavior.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: Describe what should have happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+        label: Actual behavior
+        description: Describe the unexpected behavior and its impact.
+    validations:
+        required: true
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the starting state and actions needed to reproduce the problem.
+      placeholder: |
+        1. Start the application with ...
+        2. Open ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+        label: Additional context
+        description: Add related issues, dependencies, Figma links or screenshots.
+    validations:
+        required: false

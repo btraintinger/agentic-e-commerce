@@ -2,4 +2,4 @@
 
 | Person | Time |
 |---|---|
-| BernhardTraintinger | 0h 15m |
+| BernhardTraintinger | 0h 30m |
