@@ -1,6 +1,6 @@
-# Agents.md — Webshop Backend (IT Project 2026/27)
+# AGENTS.md — Webshop Backend (IT Project 2026/27)
 
-**Rules only, no decisions:** This file contains rules only — instructions that apply to any work in this repo. Durable decisions, rationale, measurements and history do not belong here but in `docs/`/`features/` (or the project docs); open work goes to `Agents.todo.md`, settled matters to git history.
+**Rules only, no decisions:** This file contains rules only — instructions that apply to any work in this repo. Durable decisions, rationale, measurements and history do not belong here but in `doc/`/`features/` (or the project docs); open work goes to `AGENTS.todo.md`, settled matters to git history.
 
 Project context: see `README.md`. Contract: `openapi.yaml` (generated, committed) and
 `src/types.ts` (single source of truth for types and schemas).
@@ -96,17 +96,13 @@ to test a code is `POST /validate`. Type shapes are defined in `src/types.ts`.
 
 ## Build & verify
 
-- Follow skill `build-verify` (agents-skills); its always-on kernel is
-  `.agents/rules/build-verify.md`: pull before changing, delegate implementation,
-  verify in an independent subagent, commit after every round, push and watch CI.
-  Do not keep a local copy of that flow.
 - Implementation and verification go to **separate, independent subagents** — never
   validate your own work. The verifying subagent reports findings with `file:line` +
   severity; it does not fix them.
 
 ## Conventions
 
-- **Conventional Commits** (`feat:`, `fix:`, `test:`, `docs:`, `chore:`)
+- Follow the [Git guide](doc/git/README.md) for branches, pull requests, commit messages and time tracking.
 - No comments in code unless necessary; strict TS, no `any`
 - Keep `src/validate.ts` pure (data in → result out) so it is unit-testable
 - Tests use `buildServer()` + `fastify.inject`, never a live network port

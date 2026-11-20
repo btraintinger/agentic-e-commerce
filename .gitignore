@@ -6,3 +6,7 @@ dist/
 *.js.map
 .env
 .DS_Store
+
+# Intellij
+.idea/*
+!.idea/runConfigurations/
