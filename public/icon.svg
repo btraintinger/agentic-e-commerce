@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="17 -25 620 620" role="img" aria-labelledby="title desc">
+  <title id="title">Agentic E-Commerce favicon</title>
+  <desc id="desc">Cobalt and sky blue with a mint orbit.</desc>
+  <defs>
+    <linearGradient id="bag" gradientUnits="userSpaceOnUse" x1="324" y1="147" x2="380" y2="488">
+      <stop stop-color="#685cff"/>
+      <stop offset=".29" stop-color="#4c60f4"/>
+      <stop offset=".59" stop-color="#2d72ef"/>
+      <stop offset=".82" stop-color="#2185ed"/>
+      <stop offset="1" stop-color="#2997ee"/>
+    </linearGradient>
+    <linearGradient id="bag-side" gradientUnits="userSpaceOnUse" x1="397" y1="151" x2="471" y2="480">
+      <stop stop-color="#46bfff"/>
+      <stop offset=".52" stop-color="#397be8"/>
+      <stop offset="1" stop-color="#3c3cae"/>
+    </linearGradient>
+    <linearGradient id="rear-handle" gradientUnits="userSpaceOnUse" x1="327" y1="70" x2="332" y2="166">
+      <stop stop-color="#785bff"/>
+      <stop offset=".52" stop-color="#6673ff"/>
+      <stop offset="1" stop-color="#538dff"/>
+    </linearGradient>
+    <linearGradient id="front-handle" gradientUnits="userSpaceOnUse" x1="306" y1="69" x2="302" y2="196">
+      <stop stop-color="#a6a6ff"/>
+      <stop offset=".31" stop-color="#8097ff"/>
+      <stop offset=".68" stop-color="#65a9ff"/>
+      <stop offset="1" stop-color="#75cbff"/>
+    </linearGradient>
+    <linearGradient id="orbit" gradientUnits="userSpaceOnUse" x1="565" y1="237" x2="541" y2="514">
+      <stop stop-color="#e2fff7"/>
+      <stop offset=".28" stop-color="#c1fff0"/>
+      <stop offset=".57" stop-color="#91fbe2"/>
+      <stop offset=".81" stop-color="#5eefd4"/>
+      <stop offset="1" stop-color="#4ae5cc"/>
+    </linearGradient>
+    <path id="sparkle" d="M0-24C1.4-24 2-23 2.2-21.6 3.8-9.4 9.4-3.8 21.6-2.2 23-2 24-1.4 24 0S23 2 21.6 2.2C9.4 3.8 3.8 9.4 2.2 21.6 2 23 1.4 24 0 24S-2 23-2.2 21.6C-3.8 9.4-9.4 3.8-21.6 2.2-23 2-24 1.4-24 0S-23-2-21.6-2.2C-9.4-3.8-3.8-9.4-2.2-21.6-2-23-1.4-24 0-24Z"/>
+  </defs>
+  <path d="M279 167C285 132 298 76 328 75 352 74 372 107 382 155" fill="none" stroke="url(#rear-handle)" stroke-width="11" stroke-linecap="round"/>
+  <path fill="url(#bag)" fill-rule="evenodd" d="M216 166 347 152V174C342 176 338.5 180.8 338.5 186A14.4 14.4 0 0 0 367.3 186V150L391 147C406 155 422 160 436 158L512 432C482 442 461 462 448 487L183 451ZM258 194A14 14 0 1 0 230 194 14 14 0 1 0 258 194Z"/>
+  <path fill="url(#bag-side)" d="M391 147C406 155 422 160 436 158L512 432C482 442 461 462 448 487Z"/>
+  <path d="M244 190C255 132 279 73 311 75 343 75 352 130 352 185" fill="none" stroke="url(#front-handle)" stroke-width="11" stroke-linecap="round"/>
+  <use href="#sparkle" transform="translate(139 305)" fill="#c9fff1"/>
+  <use href="#sparkle" transform="translate(279.5 248.5) scale(.51)" fill="#e7fff9"/>
+  <use href="#sparkle" transform="translate(503.5 299.5) scale(.51)" fill="#c6ffee"/>
+  <use href="#sparkle" transform="translate(134.5 430) scale(.52)" fill="#74f5dc"/>
+  <use href="#sparkle" transform="translate(559.5 408) scale(1.17)" fill="#93ffeb"/>
+  <path fill="url(#orbit)" d="M476 248C555 238 604 248 614 274 630 320 532 383 440 421 334 465 194 506 104 500 62 497 37 483 39 463 42 428 93 386 182 341L180 358C107 394 74 424 74 446 74 463 103 470 144 467 234 462 359 416 454 366 509 337 547 306 542 286 539 272 516 266 481 269Z"/>
+</svg>

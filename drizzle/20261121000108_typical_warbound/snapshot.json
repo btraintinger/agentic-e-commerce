@@ -1,0 +1,1395 @@
+{
+  "type": "base",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "4d2370cf-4054-4a3b-998c-30cb44c25427",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_enum",
+      "statementTarget": [
+        "enum",
+        "public",
+        "currency"
+      ],
+      "writes": [
+        "s|enum|public.currency",
+        "n|enum|public.currency",
+        "e|enum|public.currency",
+        "n|type|public.currency"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_enum",
+      "statementTarget": [
+        "enum",
+        "public",
+        "stock_level"
+      ],
+      "writes": [
+        "s|enum|public.stock_level",
+        "n|enum|public.stock_level",
+        "e|enum|public.stock_level",
+        "n|type|public.stock_level"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_enum",
+      "statementTarget": [
+        "enum",
+        "public",
+        "voucher_type"
+      ],
+      "writes": [
+        "s|enum|public.voucher_type",
+        "n|enum|public.voucher_type",
+        "e|enum|public.voucher_type",
+        "n|type|public.voucher_type"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "categories"
+      ],
+      "writes": [
+        "s|tbl|public.categories",
+        "n|tbl|public.categories",
+        "e|tbl|public.categories",
+        "n|rel|public.categories",
+        "n|type|public.categories",
+        "n|rel|public.categories_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "offers"
+      ],
+      "writes": [
+        "s|tbl|public.offers",
+        "n|tbl|public.offers",
+        "e|tbl|public.offers",
+        "n|rel|public.offers",
+        "n|type|public.offers",
+        "n|rel|public.offers_pkey"
+      ],
+      "reads": [
+        "n|sch|public",
+        "n|enum|public.currency",
+        "n|enum|public.stock_level"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "products"
+      ],
+      "writes": [
+        "s|tbl|public.products",
+        "n|tbl|public.products",
+        "e|tbl|public.products",
+        "n|rel|public.products",
+        "n|type|public.products",
+        "n|rel|public.products_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "variants"
+      ],
+      "writes": [
+        "s|tbl|public.variants",
+        "n|tbl|public.variants",
+        "e|tbl|public.variants",
+        "n|rel|public.variants",
+        "n|type|public.variants",
+        "n|rel|public.variants_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "vendors"
+      ],
+      "writes": [
+        "s|tbl|public.vendors",
+        "n|tbl|public.vendors",
+        "e|tbl|public.vendors",
+        "n|rel|public.vendors",
+        "n|type|public.vendors",
+        "n|rel|public.vendors_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "vouchers"
+      ],
+      "writes": [
+        "s|tbl|public.vouchers",
+        "n|tbl|public.vouchers",
+        "e|tbl|public.vouchers",
+        "n|rel|public.vouchers",
+        "n|type|public.vouchers",
+        "n|rel|public.vouchers_pkey"
+      ],
+      "reads": [
+        "n|sch|public",
+        "n|enum|public.voucher_type"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "warehouses"
+      ],
+      "writes": [
+        "s|tbl|public.warehouses",
+        "n|tbl|public.warehouses",
+        "e|tbl|public.warehouses",
+        "n|rel|public.warehouses",
+        "n|type|public.warehouses",
+        "n|rel|public.warehouses_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "offers",
+        "offers_variant_id_price_index"
+      ],
+      "writes": [
+        "s|idx|public.offers_variant_id_price_index",
+        "n|idx|public.offers_variant_id_price_index",
+        "e|idx|public.offers_variant_id_price_index",
+        "n|rel|public.offers_variant_id_price_index"
+      ],
+      "reads": [
+        "n|tbl|public.offers",
+        "n|sch|public",
+        "n|col|public.offers.variant_id",
+        "n|col|public.offers.price"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "offers",
+        "offers_vendor_id_index"
+      ],
+      "writes": [
+        "s|idx|public.offers_vendor_id_index",
+        "n|idx|public.offers_vendor_id_index",
+        "e|idx|public.offers_vendor_id_index",
+        "n|rel|public.offers_vendor_id_index"
+      ],
+      "reads": [
+        "n|tbl|public.offers",
+        "n|sch|public",
+        "n|col|public.offers.vendor_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "offers",
+        "offers_warehouse_id_index"
+      ],
+      "writes": [
+        "s|idx|public.offers_warehouse_id_index",
+        "n|idx|public.offers_warehouse_id_index",
+        "e|idx|public.offers_warehouse_id_index",
+        "n|rel|public.offers_warehouse_id_index"
+      ],
+      "reads": [
+        "n|tbl|public.offers",
+        "n|sch|public",
+        "n|col|public.offers.warehouse_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "products",
+        "products_category_id_index"
+      ],
+      "writes": [
+        "s|idx|public.products_category_id_index",
+        "n|idx|public.products_category_id_index",
+        "e|idx|public.products_category_id_index",
+        "n|rel|public.products_category_id_index"
+      ],
+      "reads": [
+        "n|tbl|public.products",
+        "n|sch|public",
+        "n|col|public.products.category_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "variants",
+        "variants_product_id_index"
+      ],
+      "writes": [
+        "s|idx|public.variants_product_id_index",
+        "n|idx|public.variants_product_id_index",
+        "e|idx|public.variants_product_id_index",
+        "n|rel|public.variants_product_id_index"
+      ],
+      "reads": [
+        "n|tbl|public.variants",
+        "n|sch|public",
+        "n|col|public.variants.product_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "vouchers",
+        "vouchers_category_id_index"
+      ],
+      "writes": [
+        "s|idx|public.vouchers_category_id_index",
+        "n|idx|public.vouchers_category_id_index",
+        "e|idx|public.vouchers_category_id_index",
+        "n|rel|public.vouchers_category_id_index"
+      ],
+      "reads": [
+        "n|tbl|public.vouchers",
+        "n|sch|public",
+        "n|col|public.vouchers.category_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "offers"
+      ],
+      "writes": [
+        "s|fk|public.offers.offers_variant_id_variants_id_fkey",
+        "n|fk|public.offers.offers_variant_id_variants_id_fkey",
+        "e|fk|public.offers.offers_variant_id_variants_id_fkey",
+        "n|con|public.offers.offers_variant_id_variants_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.offers",
+        "n|sch|public",
+        "n|tbl|public.variants",
+        "n|sch|public",
+        "n|col|public.offers.variant_id",
+        "n|col|public.variants.id",
+        "e|uniqueness|public.variants.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "offers"
+      ],
+      "writes": [
+        "s|fk|public.offers.offers_vendor_id_vendors_id_fkey",
+        "n|fk|public.offers.offers_vendor_id_vendors_id_fkey",
+        "e|fk|public.offers.offers_vendor_id_vendors_id_fkey",
+        "n|con|public.offers.offers_vendor_id_vendors_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.offers",
+        "n|sch|public",
+        "n|tbl|public.vendors",
+        "n|sch|public",
+        "n|col|public.offers.vendor_id",
+        "n|col|public.vendors.id",
+        "e|uniqueness|public.vendors.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "offers"
+      ],
+      "writes": [
+        "s|fk|public.offers.offers_warehouse_id_warehouses_id_fkey",
+        "n|fk|public.offers.offers_warehouse_id_warehouses_id_fkey",
+        "e|fk|public.offers.offers_warehouse_id_warehouses_id_fkey",
+        "n|con|public.offers.offers_warehouse_id_warehouses_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.offers",
+        "n|sch|public",
+        "n|tbl|public.warehouses",
+        "n|sch|public",
+        "n|col|public.offers.warehouse_id",
+        "n|col|public.warehouses.id",
+        "e|uniqueness|public.warehouses.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "products"
+      ],
+      "writes": [
+        "s|fk|public.products.products_category_id_categories_id_fkey",
+        "n|fk|public.products.products_category_id_categories_id_fkey",
+        "e|fk|public.products.products_category_id_categories_id_fkey",
+        "n|con|public.products.products_category_id_categories_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.products",
+        "n|sch|public",
+        "n|tbl|public.categories",
+        "n|sch|public",
+        "n|col|public.products.category_id",
+        "n|col|public.categories.id",
+        "e|uniqueness|public.categories.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "variants"
+      ],
+      "writes": [
+        "s|fk|public.variants.variants_product_id_products_id_fkey",
+        "n|fk|public.variants.variants_product_id_products_id_fkey",
+        "e|fk|public.variants.variants_product_id_products_id_fkey",
+        "n|con|public.variants.variants_product_id_products_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.variants",
+        "n|sch|public",
+        "n|tbl|public.products",
+        "n|sch|public",
+        "n|col|public.variants.product_id",
+        "n|col|public.products.id",
+        "e|uniqueness|public.products.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "vouchers"
+      ],
+      "writes": [
+        "s|fk|public.vouchers.vouchers_category_id_categories_id_fkey",
+        "n|fk|public.vouchers.vouchers_category_id_categories_id_fkey",
+        "e|fk|public.vouchers.vouchers_category_id_categories_id_fkey",
+        "n|con|public.vouchers.vouchers_category_id_categories_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.vouchers",
+        "n|sch|public",
+        "n|tbl|public.categories",
+        "n|sch|public",
+        "n|col|public.vouchers.category_id",
+        "n|col|public.categories.id",
+        "e|uniqueness|public.categories.id"
+      ]
+    }
+  ],
+  "ddl": [
+    {
+      "schema": "public",
+      "name": "categories",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "offers",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "products",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "variants",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "vendors",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "vouchers",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "warehouses",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "currency",
+      "values": [
+        "EUR"
+      ],
+      "entityType": "enums"
+    },
+    {
+      "schema": "public",
+      "name": "stock_level",
+      "values": [
+        "NO",
+        "LITTLE",
+        "ALOT"
+      ],
+      "entityType": "enums"
+    },
+    {
+      "schema": "public",
+      "name": "voucher_type",
+      "values": [
+        "percent",
+        "fixed"
+      ],
+      "entityType": "enums"
+    },
+    {
+      "schema": "public",
+      "table": "categories",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "categories",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "categories",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "variant_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "vendor_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "warehouse_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "price",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "currency",
+      "type": "currency",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'EUR'",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "shipping_cost",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "free_shipping_threshold",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "delivery_days_min",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "delivery_days_max",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "stock",
+      "type": "stock_level",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "category_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "brand",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "tags",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "attributes",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "variants",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "variants",
+      "name": "product_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "variants",
+      "name": "sku",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "variants",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "variants",
+      "name": "attributes",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vendors",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vendors",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vendors",
+      "name": "rating",
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "code",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "type",
+      "type": "voucher_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "value",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "min_order_value",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "valid_until",
+      "type": "date",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "category_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "warehouses",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "warehouses",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "warehouses",
+      "name": "country",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "warehouses",
+      "name": "package_tax",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_variant_id_price_index",
+      "nameExplicit": false,
+      "columns": [
+        {
+          "value": "variant_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "price",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_vendor_id_index",
+      "nameExplicit": false,
+      "columns": [
+        {
+          "value": "vendor_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_warehouse_id_index",
+      "nameExplicit": false,
+      "columns": [
+        {
+          "value": "warehouse_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "products_category_id_index",
+      "nameExplicit": false,
+      "columns": [
+        {
+          "value": "category_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "variants",
+      "name": "variants_product_id_index",
+      "nameExplicit": false,
+      "columns": [
+        {
+          "value": "product_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "vouchers_category_id_index",
+      "nameExplicit": false,
+      "columns": [
+        {
+          "value": "category_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_variant_id_variants_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "variant_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "variants",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_vendor_id_vendors_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "vendor_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "vendors",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_warehouse_id_warehouses_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "warehouse_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "warehouses",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "products_category_id_categories_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "category_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "categories",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "variants",
+      "name": "variants_product_id_products_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "product_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "products",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "vouchers_category_id_categories_id_fkey",
+      "nameExplicit": false,
+      "columns": [
+        "category_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "categories",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "categories",
+      "name": "categories_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "name": "products_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "variants",
+      "name": "variants_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "vendors",
+      "name": "vendors_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "vouchers_pkey",
+      "columns": [
+        "code"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "warehouses",
+      "name": "warehouses_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_monetary_values_nonnegative",
+      "value": "\"price\" >= 0 and \"shipping_cost\" >= 0 and \"free_shipping_threshold\" >= 0",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_threshold_requires_paid_shipping",
+      "value": "\"free_shipping_threshold\" is null or \"shipping_cost\" > 0",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "offers",
+      "name": "offers_delivery_days_range",
+      "value": "\"delivery_days_min\" >= 0 and \"delivery_days_max\" >= \"delivery_days_min\"",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "vendors",
+      "name": "vendors_rating_range",
+      "value": "\"rating\" between 1 and 5",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "vouchers",
+      "name": "vouchers_values_nonnegative",
+      "value": "\"value\" >= 0 and \"min_order_value\" >= 0",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "warehouses",
+      "name": "warehouses_package_tax_nonnegative",
+      "value": "\"package_tax\" >= 0",
+      "entityType": "checks"
+    }
+  ]
+}

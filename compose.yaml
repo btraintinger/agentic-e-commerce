@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: webshop
+      POSTGRES_USER: webshop
+      POSTGRES_PASSWORD: webshop
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - webshop-pg17-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-h",
+          "127.0.0.1",
+          "-U",
+          "webshop",
+          "-d",
+          "webshop",
+        ]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  webshop-pg17-data:
