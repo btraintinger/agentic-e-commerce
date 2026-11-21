@@ -1,10 +1,12 @@
 node_modules/
+/.pnpm-store/
 dist/
-*.js
-*.d.ts
-*.d.ts.map
-*.js.map
+.next/
+next-env.d.ts
+*.tsbuildinfo
 .env
+.env.*
+!.env.example
 .DS_Store
 
 # Intellij
