@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  app:
+    name: Build and test the Next.js app
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DATABASE_URL: postgresql://webshop:webshop@127.0.0.1:5432/webshop
+      DATABASE_URL_DIRECT: postgresql://webshop:webshop@127.0.0.1:5432/webshop
+      TEST_DATABASE_URL: postgresql://webshop:webshop@127.0.0.1:5432/webshop
+      NEXT_TELEMETRY_DISABLED: "1"
+    services:
+      db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: webshop
+          POSTGRES_USER: webshop
+          POSTGRES_PASSWORD: webshop
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U webshop -d webshop"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        id: node
+        with:
+          node-version: 26
+      - uses: pnpm/action-setup@v6
+        with:
+          cache: true
+      - run: pnpm ci
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+      - run: pnpm test
+      - name: Cache Next.js build output
+        uses: actions/cache@v5
+        with:
+          path: .next/cache
+          key: nextjs-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ hashFiles('package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'next.config.mjs', 'tsconfig.json') }}-${{ hashFiles('src/**', 'public/**') }}
+          restore-keys: |
+            nextjs-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ hashFiles('package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'next.config.mjs', 'tsconfig.json') }}-
+      - run: pnpm build
