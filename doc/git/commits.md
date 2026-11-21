@@ -12,7 +12,7 @@ The description says what changed, briefly and concretely. The scope names the a
 ## Common types
 
 | Type       | Meaning                                       |
-|------------|-----------------------------------------------|
+| ---------- | --------------------------------------------- |
 | `feat`     | A new feature                                 |
 | `fix`      | A bug fix                                     |
 | `docs`     | Documentation                                 |
