@@ -1,0 +1,20 @@
+# Generated files and package manager metadata
+/coverage/
+/drizzle/
+/next-env.d.ts
+/pnpm-lock.yaml
+/TIME_TRACKING.md
+
+# Agent, IDE, and tooling metadata
+/.agents/
+/.aws/
+/.claude/
+/.codegraph/
+/.codex/
+/.github/ISSUE_TEMPLATE/
+/.github/pull_request_template.md
+/.githooks/
+/.idea/
+/.vercel/
+/*.iml
+/skills-lock.json
