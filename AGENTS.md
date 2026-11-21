@@ -1,111 +1,89 @@
 # AGENTS.md — Webshop Backend (IT Project 2026/27)
 
-**Rules only, no decisions:** This file contains rules only — instructions that apply to any work in this repo. Durable decisions, rationale, measurements and history do not belong here but in `doc/`/`features/` (or the project docs); open work goes to `AGENTS.todo.md`, settled matters to git history.
+**Rules only, no decisions.** Durable decisions, rationale, measurements, and
+history belong in the project documentation. Use `AGENTS.todo.md` for open work
+and Git history for settled matters.
 
-Project context: see `README.md`. Contract: `openapi.yaml` (generated, committed) and
-`src/types.ts` (single source of truth for types and schemas).
+Start with the [README](README.md) for project context and quick start, the
+[development guide](doc/development.md) for setup, the [API reference](doc/api.md)
+for procedures, and the [test plan](doc/testing.md) for coverage. See
+[AGENTS.todo.md](AGENTS.todo.md) for open work.
 
-## Stack
+<!-- CODEGRAPH_START -->
 
-- Node.js >= 20, pnpm, ESM (`"type": "module"`)
-- TypeScript (strict), Fastify 5
-- `@fastify/swagger` + `@fastify/swagger-ui` (docs at `/docs`, spec export to `openapi.yaml`)
-- `@fastify/rate-limit` (only on `POST /validate`: 5 requests / minute / IP)
-- `zod` for dataset validation, `vitest` for tests, `tsx` for dev/scripts
-- Money is always **integer cents**, currency `EUR`. IDs are UUIDs.
+## Code navigation
 
-## Commands
+When `.codegraph/` exists at the repository root, use CodeGraph first to find
+or understand code. Query `codegraph_explore` with a path, symbol, or question,
+or run `codegraph explore "<path, symbol, or question>"` in the shell. Skip
+CodeGraph when the index is absent.
 
-| Command             | Purpose                                        |
-| ------------------- | ---------------------------------------------- |
-| `pnpm dev`          | Start server with watch (tsx)                  |
-| `pnpm start`        | Start server (tsx, no watch)                   |
-| `pnpm typecheck`    | `tsc --noEmit`                                 |
-| `pnpm test`         | `vitest run`                                   |
-| `pnpm openapi`      | Generate/refresh committed `openapi.yaml`      |
-| `pnpm client`       | Run CLI demo client against a running server   |
-
-Env vars: `PORT` (default 3000), `HOST` (default 0.0.0.0), `DATASET_PATH`
-(default `data/dataset.json` — swap datasets without code changes).
+<!-- CODEGRAPH_END -->
 
 ## Project structure
 
-```
-data/dataset.json     # default sample dataset (swappable via DATASET_PATH)
-src/types.ts          # all domain + API types (single source of truth)
-src/dataset.ts        # zod schemas, loader, lookup indexes (by id, offer→variant→product)
-src/validate.ts       # pure cart validation logic (no fastify imports!)
-src/server.ts         # buildServer() factory: plugins, schemas, routes
-src/index.ts          # entrypoint (reads env, starts server)
-src/routes/*.ts       # route plugins per resource
-scripts/openapi.ts    # boots server, writes swagger YAML to openapi.yaml
-client/demo.ts        # CLI demo client (plain fetch, no deps)
-test/*.test.ts        # vitest suites (use buildServer + fastify.inject)
-openapi.yaml          # generated, committed — contract for the frontend team
-```
+| Path                                         | What lives there                                |
+| -------------------------------------------- | ----------------------------------------------- |
+| [`src/app/`](src/app/)                       | Next.js routes, including the tRPC HTTP handler |
+| [`src/server/api/`](src/server/api/)         | tRPC router and procedures                      |
+| [`src/server/catalog/`](src/server/catalog/) | Catalog queries                                 |
+| [`src/server/cart/`](src/server/cart/)       | Cart calculations                               |
+| [`src/server/db/`](src/server/db/)           | Database schema and connections                 |
+| [`scripts/seed/`](scripts/seed/)             | Seed definitions                                |
+| [`drizzle/`](drizzle/)                       | Generated migrations                            |
 
-## API contract (do not deviate)
+## Development and database
 
-- `GET /health` → `{ status: "ok" }`
-- `GET /categories` → `Category[]`
-- `GET /categories/:id/products` → `Product[]` (404 if category unknown)
-- `GET /products?category=&q=&minPrice=&maxPrice=` → `Product[]`
-  (`q` matches name/description/brand/tags, case-insensitive; price filters in
-  cents, match if **any** offer price is in range)
-- `GET /products/:id` → `Product` (404 if unknown)
-- `GET /vendors` → `Vendor[]`, `GET /vendors/:id` → `Vendor` (404)
-- `GET /warehouses` → `Warehouse[]` (warehouse UUIDs are public)
-- `POST /validate` → `ValidateResponse` (rate-limited 5/min/IP → 429)
-- All error bodies: `{ statusCode, error, message }` (fastify default shape).
+- Use Node.js 26, the pnpm version pinned in `package.json`, and TypeScript
+  with ESM. Use Next.js App Router, tRPC, Drizzle v1 with PostgreSQL, and Vitest.
+- Start the app with `pnpm dev` and local PostgreSQL with
+  `docker compose up -d --wait`. Use `DATABASE_URL` for the app and
+  `DATABASE_URL_DIRECT` for migrations and seed.
+- Generate migrations with `pnpm db:generate` and apply them with
+  `pnpm db:migrate`. Include the generated SQL and snapshots with schema changes.
+- Seed with `pnpm db:seed`. Keep TypeScript seed definitions deterministic.
 
-Vouchers are **never exposed via the API** (no list/detail endpoint); the only way
-to test a code is `POST /validate`. Type shapes are defined in `src/types.ts`.
+## API contract
 
-## `/validate` semantics
+- Serve public procedures at `/api/trpc` and keep the documented procedure
+  names stable. The exported tRPC `AppRouter` is the public API contract.
+  Use Zod for tRPC inputs and Drizzle schema inference for persisted types.
+- Use UUIDs for catalog IDs and integer euro cents for money. Product responses
+  contain variants and offers. Match search terms against name, description,
+  brand, or tags case-insensitively. Match a price range when one offer
+  satisfies both bounds.
+- Use tRPC `NOT_FOUND` for unknown category, product, and vendor IDs in scoped
+  and detail lookups. Keep voucher records private. Check a supplied code only
+  in `cart.validate`.
+- Rate-limit `cart.validate` to five calls per minute per IP in each app
+  instance. Return tRPC `TOO_MANY_REQUESTS` when the limit is exceeded.
 
-- Request: `{ items: { offerId: string; quantity: number }[]; voucherCode?: string }`.
-- Response: `{ valid, issues, shipments, totals, deliveryDays, packageCount }`
-  (see `src/types.ts`).
-- Unknown offer → `OFFER_NOT_FOUND`; `quantity < 1` or non-integer → `INVALID_QUANTITY`;
-  `quantity > stock` → `OUT_OF_STOCK`. Problem items are excluded from shipments/totals.
-- Shipments group valid items by `(vendorId, warehouseId)`.
-- Shipment `shippingCost = Σ item.shippingCost × quantity`; set to `0` if any item's
-  offer has `freeShippingThreshold` and the shipment's `itemsSubtotal >=` that threshold.
-- Shipment `deliveryDays = { min: max(items.min), max: max(items.max) }` (ships complete).
-- Overall `deliveryDays = { min: max(shipments.min), max: max(shipments.max) }`,
-  `null` when there are no shipments.
-- Voucher: applied to items subtotal (never shipping); with `categoryId` only to the
-  matching items' subtotal. Discount capped at eligible subtotal. Invalid voucher →
-  `discount: 0` + issue (items/shipping still computed).
-- `grand = items + shipping − discount`.
+## Implementation and verification
 
-## Shipping & taxes
-
-- Offers carry per-item `shippingCost` in cents; most offers have `shippingCost: 0`.
-- `freeShippingThreshold` is only set on paid offers; when a shipment's `itemsSubtotal >=`
-  threshold, that shipment's `shippingCost` is reduced to 0.
-- Austrian warehouses (country `"AT"`) carry a flat `packageTax` of 300 cents per shipment.
-- `Shipment` exposes both `shippingCost` and `packageTax`.
-- `totals.shipping` = sum over all shipments of (`shippingCost` + `packageTax`).
-
-## Dataset
-
-- The dataset is generated by `scripts/generate-data.mjs` — never hand-edit `data/dataset.json`.
-- Regenerate with `node scripts/generate-data.mjs`.
-- Curated "JKU Starter Set" products are tagged `starter-set`.
-
-## Build & verify
-
-- Implementation and verification go to **separate, independent subagents** — never
-  validate your own work. The verifying subagent reports findings with `file:line` +
-  severity; it does not fix them.
+- Assign implementation and verification to **separate, independent
+  subagents**. The verifier reviews the diff, runs the checks, and reports
+  each finding with severity and `file:line` without editing files. The
+  implementation subagent addresses findings and hands fixes back for review.
+- Run `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and
+  `pnpm build`. `pnpm check` runs the first three. Use `pnpm start` to verify
+  the production build.
+- Set `TEST_DATABASE_URL` to a disposable PostgreSQL instance with a role
+  that can create test databases to run the integration tests.
 
 ## Conventions
 
-- Follow the [Git guide](doc/git/README.md) for branches, pull requests, commit messages and time tracking.
-- No comments in code unless necessary; strict TS, no `any`
-- Keep `src/validate.ts` pure (data in → result out) so it is unit-testable
-- Tests use `buildServer()` + `fastify.inject`, never a live network port
-  (except rate-limit test may use inject with distinct `remoteAddress`)
-- After changes always run: `pnpm typecheck && pnpm test`
-- When API shape changes: regenerate `openapi.yaml` via `pnpm openapi` and commit it
+- Follow the [Git guide](doc/git/README.md) for branches, pull requests,
+  commits, and time tracking.
+- Keep TypeScript strict, avoid `any`, and add comments only when necessary.
+- Test the HTTP handler directly with Web Requests. Use fixed inputs and
+  a fixed clock for cart calculation tests.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
