@@ -1,7 +1,5 @@
 # Requirements – LLM-driven JKU web shop
 
-Nov 5, 2026 · @Basti
-
 The web shop is operated entirely through a chat: a local open-source LLM in the browser recognises what the user wants, and the code controls search, follow-up questions and cart via the Fastify backend. The requirements describe the finished project; the exploratory prototype (v2) is the starting point.
 
 Implementation as issues: Issues (EN)
@@ -12,7 +10,70 @@ The goal is a web shop that is operated entirely through a chat (navigation, sea
 
 ## Architecture at a glance
 
-![Architecture · browser and backend](Architektur_v3.gif)
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Helvetica, Arial, sans-serif","fontSize":"15px","lineColor":"#0B5563","primaryTextColor":"#1F1F1F","edgeLabelBackground":"#FFFFFF"}}}%%
+block-beta
+  block:canvas
+    columns 2
+
+    block:browser
+      columns 5
+      title["<span style='color:#0B5563'><b>Browser</b></span>"]
+      space:4
+      chat["<b>React Chat</b><br><code style='color:#000000'>useChat</code>"]
+      space
+      agent["<b>Agent</b><br><code style='color:#000000'>Vercel AI SDK</code>"]
+      space
+      llm["<b>Local LLM</b><br><code style='color:#000000'>WebLLM / WebGPU</code>"]
+      space:5
+      space:4
+      tools["<b>Shop Tools</b>"]
+      space:5
+      space:4
+      cart["<b>Shopping Cart</b><br><code style='color:#000000'>React State</code>"]
+    end
+
+    block:server
+      columns 3
+      space:3
+      space
+      db[("<b>PostgreSQL</b>")]
+      space
+      space:3
+      space
+      backend["<span style='color:#FFFFFF'><b>Backend</b></span>"]
+      space
+      space:3
+      space:3
+    end
+
+  end
+
+  chat --> agent
+  agent -- "Else, with WebGPU" --> llm
+  llm -- "Tool call when needed" --> tools
+  agent -- "Detected directly" --> tools
+  tools -- "Add offer" --> cart
+  tools -- "Products and offers" --> backend
+  cart -- "Validate cart" --> backend
+  backend -- "ORM" --> db
+
+  classDef box fill:#FFFFFF,stroke:#C9C9C9,stroke-width:1.5px,color:#1F1F1F
+  classDef frame fill:#FFFFFF,stroke:#BFD3D6,stroke-width:1.5px
+  classDef plain fill:transparent,stroke:transparent
+  classDef dark fill:#0B5563,stroke:#0B5563,color:#FFFFFF
+  classDef store fill:#FFFFFF,stroke:#9FB0B3,stroke-width:1.5px,color:#1F1F1F
+  classDef none fill:transparent,stroke:transparent
+  classDef bg fill:#FFFFFF,stroke:#FFFFFF
+
+  class chat,agent,llm,tools,cart box
+  class browser frame
+  class title plain
+  class backend dark
+  class db store
+  class server none
+  class canvas bg
+```
 
 *Architecture · browser and backend*
 
@@ -20,7 +81,7 @@ Everything except the backend runs in the browser:
 
 - **React chat** (`useChat`) passes each message to the **agent** (Vercel AI SDK).
 - Input the agent recognises directly (e.g. an option click or “No. 2”) goes straight to the **shop tools**, without the model.
-- Everything else goes to **Qwen3**, running locally via WebLLM/WebGPU, which calls a shop tool when needed.
+- Everything else goes to **LLM**, running locally via WebLLM/WebGPU, which calls a shop tool when needed.
 - The shop tools load products and offers from the **backend** and add the chosen offer to the **cart** (React state).
 - The backend checks the cart and reads the data from **PostgreSQL** via Drizzle ORM.
 
@@ -129,7 +190,7 @@ A small language model invents values, confuses intents and can be manipulated b
 
 | ID     | Requirement                                      | Acceptance criterion                                                                                                                             | Priority |
 |--------|--------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|----------|
-| NFA-01 | Replies are fast.                                | Code recognition including backend under 0.3 s; message with model at most 4 s (Qwen2.5 3B, measured 2–3 s); GET /search under 50 ms.            | Must     |
+| NFA-01 | Replies are fast.                                | Code recognition including backend under 0.3 s; message with model at most 4 s (llm2.5 3B, measured 2–3 s); GET /search under 50 ms.            | Must     |
 | NFA-02 | Startup after the first time is short.           | The model loads from the browser cache and is ready in under 30 s; progress in percent on first load.                                            | Nice to have   |
 | NFA-03 | Chat texts stay local.                           | No cloud LLM, no trackers; only search parameters and offer IDs go to the backend.                                                               | Must     |
 | NFA-04 | The application does not crash.                  | No unhandled exception in the console in any test run or dialog case; every error appears as a message in the chat.                              | Must     |
@@ -144,7 +205,7 @@ A small language model invents values, confuses intents and can be manipulated b
 
 | Risk                                                                 | Impact                                      | Mitigation                                                                                         |
 |----------------------------------------------------------------------|---------------------------------------------|----------------------------------------------------------------------------------------------------|
-| The assessment computer has no WebGPU or too little graphics memory. | The model does not load and the demo fails. | Test early on the target device; Qwen2.5 1.5B as fallback; bring our own demo laptop.              |
+| The assessment computer has no WebGPU or too little graphics memory. | The model does not load and the demo fails. | Test early on the target device; llm2.5 1.5B as fallback; bring our own demo laptop.              |
 | First download of about 2.5 GB.                                      | Long wait during the presentation.          | Load the model beforehand; it stays in the browser cache.                                          |
 | More intents (FA-11) confuse the small model.                        | Accuracy in the test run drops.             | Run the test run before and after every extension; handle unambiguous cases with code recognition. |
 | Rate limit of POST /validate (5 per minute).                         | Tests and demo run into HTTP 429.           | Call it only at checkout; replace the call in tests.                                               |
