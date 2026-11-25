@@ -1,14 +1,355 @@
 import { expect, test, vi } from "vitest";
-import { createShoppingAgent } from "@/agent/agent";
+import {
+  createShoppingAgent,
+  failureReply,
+  offTopicReply,
+  toOptions,
+  toProductFilters,
+  type CartLine,
+} from "@/agent/agent";
+import { intentSchema, type Intent } from "@/agent/intent";
+import type * as IntentModule from "@/agent/intent";
 import { createTestTRPCOptions } from "../../support/trpc-client";
 
 vi.mock("server-only", () => ({}));
 
-test("the shopping agent scaffold leaves the query cache empty", () => {
-  const { trpc, queryClient } = createTestTRPCOptions();
-  const model = undefined;
+const { recognizeIntent } = vi.hoisted(() => ({ recognizeIntent: vi.fn() }));
+vi.mock("@/agent/intent", async (importOriginal) => ({
+  ...(await importOriginal<typeof IntentModule>()),
+  recognizeIntent,
+}));
 
-  createShoppingAgent(model, trpc, queryClient);
+const intent = (fields: Partial<Intent>): Intent => ({
+  intent: "search",
+  product: null,
+  gender: null,
+  quantity: null,
+  minPriceEur: null,
+  maxPriceEur: null,
+  number: null,
+  ...fields,
+});
+
+const offer = (id: string, price: number, stock: "NO" | "LITTLE" | "ALOT") => ({
+  id,
+  vendorId: "v",
+  warehouseId: "w",
+  price,
+  currency: "EUR" as const,
+  shippingCost: 0,
+  stock,
+  deliveryDays: { min: 1, max: 2 },
+});
+
+const jacket = {
+  id: "p1",
+  categoryId: "c",
+  name: "Rain Jacket",
+  description: "",
+  tags: [],
+  attributes: {},
+  variants: [
+    {
+      id: "v-f",
+      sku: "f",
+      name: "M / Red",
+      attributes: { gender: "female" },
+      offers: [offer("o-f", 9000, "ALOT")],
+    },
+    {
+      id: "v-m",
+      sku: "m",
+      name: "M / Black",
+      attributes: { gender: "male" },
+      offers: [offer("o-m-out", 8000, "NO"), offer("o-m", 12000, "LITTLE")],
+    },
+  ],
+};
+
+function memoryCart() {
+  let lines: CartLine[] = [];
+  return {
+    lines: () => lines,
+    add: (line: CartLine) => {
+      lines = [...lines, line];
+    },
+    remove: (offerId: string) => {
+      lines = lines.filter((line) => line.offerId !== offerId);
+    },
+  };
+}
+
+test("creating the shopping agent leaves the query cache empty", () => {
+  const { trpc, queryClient } = createTestTRPCOptions();
+
+  createShoppingAgent(undefined, trpc, queryClient);
 
   expect(queryClient.getQueryCache().getAll()).toEqual([]);
+});
+
+test("the intent schema has the required fields and rejects other intents", () => {
+  expect(Object.keys(intentSchema.shape)).toEqual(
+    expect.arrayContaining(["intent", "gender", "quantity", "maxPriceEur"]),
+  );
+  expect(
+    intentSchema.safeParse({ ...intent({}), intent: "write_poem" }).success,
+  ).toBe(false);
+});
+
+test("search filters use euro cents", () => {
+  expect(
+    toProductFilters(
+      intent({ product: "rain jacket", minPriceEur: 10, maxPriceEur: 150 }),
+    ),
+  ).toEqual({ q: "rain jacket", minPrice: 1000, maxPrice: 15000 });
+});
+
+test("options keep the cheapest in-stock offer of the requested gender", () => {
+  const [option] = toOptions(
+    [jacket],
+    intent({ product: "rain jacket", gender: "male", maxPriceEur: 150 }),
+  );
+
+  expect(option).toMatchObject({ number: 1, offerId: "o-m", price: 12000 });
+});
+
+test("off-topic messages never reach the backend or the cart", async () => {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  const cart = memoryCart();
+  const agent = createShoppingAgent(undefined, trpc, queryClient, cart);
+
+  const reply = await agent.execute(intent({ intent: "off_topic" }));
+
+  expect(reply.text).toBe(offTopicReply);
+  expect(cart.lines()).toEqual([]);
+  expect(queryClient.getQueryCache().getAll()).toEqual([]);
+});
+
+test("adding and removing by number changes the cart", async () => {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  const cart = memoryCart();
+  const agent = createShoppingAgent(undefined, trpc, queryClient, cart);
+  const [option] = toOptions([jacket], intent({}));
+  if (!option) throw new Error("expected an option");
+
+  agent.addOption(option);
+  await agent.execute(intent({ intent: "remove_from_cart", number: 1 }));
+
+  expect(cart.lines()).toEqual([]);
+});
+
+test("search falls back to single words and deduplicates products", async () => {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  const boots = { ...jacket, id: "p2", name: "Rain Boots" };
+  const query = vi
+    .spyOn(queryClient, "query")
+    .mockResolvedValueOnce([])
+    .mockResolvedValueOnce([boots])
+    .mockResolvedValueOnce([jacket, boots]);
+  const agent = createShoppingAgent(undefined, trpc, queryClient);
+
+  const reply = await agent.execute(
+    intent({ product: "a rain jacket", maxPriceEur: 150 }),
+  );
+
+  const queries = query.mock.calls.map(([options]) => options.queryKey);
+  expect(queries).toHaveLength(3);
+  expect(queries.map((key) => key[1])).toEqual([
+    expect.objectContaining({ input: { q: "a rain jacket", maxPrice: 15000 } }),
+    expect.objectContaining({ input: { q: "rain", maxPrice: 15000 } }),
+    expect.objectContaining({ input: { q: "jacket", maxPrice: 15000 } }),
+  ]);
+  expect(reply.options?.map((option) => option.productId)).toEqual([
+    "p2",
+    "p1",
+  ]);
+});
+
+test("a failing search returns a generic error message", async () => {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  vi.spyOn(queryClient, "query").mockRejectedValue(new Error("down"));
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+  recognizeIntent.mockResolvedValue(intent({ product: "jacket" }));
+  const model = {} as Parameters<typeof createShoppingAgent>[0];
+  const agent = createShoppingAgent(model, trpc, queryClient);
+
+  const reply = await agent.handleMessage("I need a jacket");
+
+  expect(reply.text).toBe(failureReply);
+});
+
+const line = (offerId: string, name: string, variantName = "M"): CartLine => ({
+  offerId,
+  name,
+  variantName,
+  price: 1000,
+  quantity: 1,
+});
+
+function cartWith(...lines: CartLine[]) {
+  const cart = memoryCart();
+  for (const item of lines) cart.add(item);
+  const { trpc, queryClient } = createTestTRPCOptions();
+  return {
+    cart,
+    agent: createShoppingAgent(undefined, trpc, queryClient, cart),
+  };
+}
+
+test("removing prefers the named product over a wrong number", async () => {
+  const { cart, agent } = cartWith(
+    line("o1", "Rain Jacket"),
+    line("o2", "Wool Socks"),
+  );
+
+  await agent.execute(
+    intent({ intent: "remove_from_cart", product: "socks", number: 1 }),
+  );
+
+  expect(cart.lines().map((item) => item.offerId)).toEqual(["o1"]);
+});
+
+test("removing matches singular and plural words", async () => {
+  const { cart, agent } = cartWith(
+    line("o1", "Rain Jacket"),
+    line("o2", "Trail Shoe"),
+  );
+
+  await agent.execute(
+    intent({ intent: "remove_from_cart", product: "the trail shoes" }),
+  );
+
+  expect(cart.lines().map((item) => item.offerId)).toEqual(["o1"]);
+});
+
+test("removing asks when several items match equally", async () => {
+  const { cart, agent } = cartWith(
+    line("o1", "Rain Jacket"),
+    line("o2", "Rain Boots"),
+  );
+
+  const reply = await agent.execute(
+    intent({ intent: "remove_from_cart", product: "rain" }),
+  );
+
+  expect(reply.text).toContain("Rain Jacket");
+  expect(reply.text).toContain("Rain Boots");
+  expect(cart.lines()).toHaveLength(2);
+});
+
+test("removing a product that is not in the cart says so", async () => {
+  const { cart, agent } = cartWith(line("o1", "Rain Jacket"));
+
+  const reply = await agent.execute(
+    intent({ intent: "remove_from_cart", product: "hat" }),
+  );
+
+  expect(reply.text).toBe("I could not find “hat” in your cart.");
+  expect(cart.lines()).toHaveLength(1);
+});
+
+test("removing by number alone still works", async () => {
+  const { cart, agent } = cartWith(
+    line("o1", "Rain Jacket"),
+    line("o2", "Wool Socks"),
+  );
+
+  await agent.execute(intent({ intent: "remove_from_cart", number: 2 }));
+
+  expect(cart.lines().map((item) => item.offerId)).toEqual(["o1"]);
+});
+
+test("adding prefers the named product over a wrong number", async () => {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  const boots = { ...jacket, id: "p2", name: "Rain Boots" };
+  vi.spyOn(queryClient, "query").mockResolvedValue([jacket, boots]);
+  const cart = memoryCart();
+  const agent = createShoppingAgent(undefined, trpc, queryClient, cart);
+  await agent.execute(intent({ product: "rain" }));
+
+  await agent.execute(
+    intent({ intent: "add_to_cart", product: "boots", number: 1 }),
+  );
+
+  expect(cart.lines().map((item) => item.name)).toEqual(["Rain Boots"]);
+});
+
+test.each([
+  ["shoes", "Trail Shoe"],
+  ["shoe", "Trail Shoes"],
+])("removing %s matches %s", async (product, name) => {
+  const { cart, agent } = cartWith(line("o1", "Rain Jacket"), line("o2", name));
+
+  await agent.execute(intent({ intent: "remove_from_cart", product }));
+
+  expect(cart.lines().map((item) => item.offerId)).toEqual(["o1"]);
+});
+
+test("a product word inside another word does not match", async () => {
+  const { cart, agent } = cartWith(
+    line("o1", "Escape Backpack"),
+    line("o2", "Wool Socks"),
+  );
+
+  const reply = await agent.execute(
+    intent({ intent: "remove_from_cart", product: "cap" }),
+  );
+
+  expect(reply.text).toBe("I could not find “cap” in your cart.");
+  expect(cart.lines()).toHaveLength(2);
+});
+
+test("a word that only appears in the variant does not match", async () => {
+  const { cart, agent } = cartWith(
+    line("o1", "Rain Jacket", "M / Black"),
+    line("o2", "Wool Socks", "L / Grey"),
+  );
+
+  const reply = await agent.execute(
+    intent({ intent: "remove_from_cart", product: "black hat" }),
+  );
+
+  expect(reply.text).toBe("I could not find “black hat” in your cart.");
+  expect(cart.lines()).toHaveLength(2);
+});
+
+test("adding a product that was not shown does not pick the only option", async () => {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  vi.spyOn(queryClient, "query").mockResolvedValue([jacket]);
+  const cart = memoryCart();
+  const agent = createShoppingAgent(undefined, trpc, queryClient, cart);
+  await agent.execute(intent({ product: "jacket" }));
+
+  const reply = await agent.execute(
+    intent({ intent: "add_to_cart", product: "boots" }),
+  );
+
+  expect(reply.text).toBe("“boots” is not among the options I showed you.");
+  expect(cart.lines()).toEqual([]);
+});
+
+test("a named product that matches nothing ignores the number", async () => {
+  const { cart, agent } = cartWith(line("o1", "Rain Jacket"));
+
+  const reply = await agent.execute(
+    intent({ intent: "remove_from_cart", product: "hat", number: 1 }),
+  );
+
+  expect(reply.text).toBe("I could not find “hat” in your cart.");
+  expect(cart.lines()).toHaveLength(1);
+});
+
+test("adding a named product that was not shown ignores the number", async () => {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  vi.spyOn(queryClient, "query").mockResolvedValue([jacket]);
+  const cart = memoryCart();
+  const agent = createShoppingAgent(undefined, trpc, queryClient, cart);
+  await agent.execute(intent({ product: "jacket" }));
+
+  const reply = await agent.execute(
+    intent({ intent: "add_to_cart", product: "boots", number: 1 }),
+  );
+
+  expect(reply.text).toBe("“boots” is not among the options I showed you.");
+  expect(cart.lines()).toEqual([]);
 });
