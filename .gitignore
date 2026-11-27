@@ -12,3 +12,8 @@ next-env.d.ts
 # Intellij
 .idea/*
 !.idea/runConfigurations/
+
+# Playwright
+/playwright-report/
+/test-results/
+/test/e2e/.chrome-profile/

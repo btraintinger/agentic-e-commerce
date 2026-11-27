@@ -26,7 +26,12 @@ test("returns null when the LLM gives no valid request", async () => {
 
 test("corrects a wrong price direction from the LLM", async () => {
   parseWithLlm.mockResolvedValueOnce(
-    llmRequest({ product: "T-Shirt", maxPriceEur: 100, quantity: 2, gender: "male" }),
+    llmRequest({
+      product: "T-Shirt",
+      maxPriceEur: 100,
+      quantity: 2,
+      gender: "male",
+    }),
   );
 
   const result = await parseUserMessage(
@@ -34,7 +39,5 @@ test("corrects a wrong price direction from the LLM", async () => {
     "I want a T-Shirt that costs at least 100€",
   );
 
-  expect(result).toEqual(
-    llmRequest({ product: "T-Shirt", minPriceEur: 100 }),
-  );
+  expect(result).toEqual(llmRequest({ product: "T-Shirt", minPriceEur: 100 }));
 });

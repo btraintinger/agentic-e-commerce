@@ -20,8 +20,6 @@ const noSubscription = () => () => {};
 
 export const modelId = "Qwen2.5-0.5B-Instruct-q4f16_1-MLC";
 
-//export const modelId = "Llama-3.2-1B-Instruct-q4f16_1-MLC"
-
 type Message = { role: "user" } & Pick<ShopResponse, "text">;
 type Entry = Message | ({ role: "assistant" } & ShopResponse);
 
@@ -44,11 +42,12 @@ export function Chat() {
     }),
   );
   // The cart controls read the latest state through a ref, so one agent keeps its shown options.
-  const [agent] = useState(() =>
-    new ShoppingAgent(model, trpc, queryClient, { lines, add, remove }),
+  const [agent] = useState(
+    () => new ShoppingAgent(model, trpc, queryClient, { lines, add, remove }),
   );
   const warmUp = useRef<Promise<void> | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [modelReady, setModelReady] = useState(false);
   useEffect(() => {
     if (!supported || warmUp.current) return;
     warmUp.current = generateText({
@@ -56,7 +55,7 @@ export function Chat() {
       prompt: "Hi",
       maxOutputTokens: 1,
     }).then(
-      () => undefined,
+      () => setModelReady(true),
       (error: unknown) => {
         console.error(error);
         setProgress(null);
@@ -89,7 +88,11 @@ export function Chat() {
     reply({ role: "assistant", text: agent.addOption(option) });
 
   return (
-    <section className="flex min-h-[70vh] flex-col gap-3 rounded-lg border p-4">
+    <section
+      data-testid="chat"
+      data-model-ready={modelReady}
+      className="flex min-h-[70vh] flex-col gap-3 rounded-lg border p-4"
+    >
       <h2 className="font-semibold">Chat</h2>
       {!supported && (
         <p className="text-sm text-destructive">
@@ -97,10 +100,15 @@ export function Chat() {
           here.
         </p>
       )}
-      <ol className="flex flex-1 flex-col gap-3 overflow-y-auto">
+      <ol
+        data-testid="chat-log"
+        className="flex flex-1 flex-col gap-3 overflow-y-auto"
+      >
         {entries.map((entry, index) => (
           <li
             key={index}
+            data-testid="chat-entry"
+            data-role={entry.role}
             className={
               entry.role === "user"
                 ? "self-end rounded-lg bg-muted px-3 py-2 text-sm"
@@ -128,7 +136,10 @@ export function Chat() {
             {entry.role === "assistant" && entry.request && (
               <details className="mt-1 text-xs text-muted-foreground">
                 <summary>Recognised request</summary>
-                <pre className="whitespace-pre-wrap">
+                <pre
+                  data-testid="recognised-request"
+                  className="whitespace-pre-wrap"
+                >
                   {JSON.stringify(entry.request, null, 2)}
                 </pre>
               </details>
@@ -153,6 +164,7 @@ export function Chat() {
       </ol>
       <form onSubmit={(event) => void send(event)} className="flex gap-2">
         <input
+          data-testid="chat-input"
           className="flex-1 rounded-md border px-3 py-2 text-sm"
           placeholder="e.g. I need a rain jacket for men under €150"
           value={input}
@@ -161,6 +173,7 @@ export function Chat() {
         />
         <button
           type="submit"
+          data-testid="chat-send"
           className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
           disabled={!supported || busy || !input.trim()}
         >

@@ -11,14 +11,14 @@ import type {
   CartControls,
   CartLine,
   ProductOption,
-  ShopRequest
+  ShopRequest,
 } from "@/agent/types";
 import type { AppRouter } from "@/server/api/root";
 
 /**
- * 
+ *
  * It acts on the JSON (ShopRequest) the parser (with help of the llm) is producing
- * 
+ *
  * One chat message → one shop action:
  *   parseUserMessage → execute (search | addToCart | removeFromCart | offTopic) → reply
  *
@@ -46,7 +46,10 @@ export class ShoppingAgent {
 
   handleMessage = async (userMessage: string): Promise<ShopResponse> => {
     if (!this.model) return { text: replies.modelNotLoaded };
-    const shopRequest = await this.parseUserMessageWithTiming(this.model, userMessage);
+    const shopRequest = await this.parseUserMessageWithTiming(
+      this.model,
+      userMessage,
+    );
     if (!shopRequest) return { text: replies.retry };
     return this.executeSafely(shopRequest);
   };
@@ -69,7 +72,10 @@ export class ShoppingAgent {
 
   // --- Steps of handleMessage ------------------------------------------------
 
-  private async parseUserMessageWithTiming(model: LanguageModel, userMessage: string) {
+  private async parseUserMessageWithTiming(
+    model: LanguageModel,
+    userMessage: string,
+  ) {
     const start = performance.now();
     const shopRequest = await parseUserMessage(model, userMessage);
     const ms = Math.round(performance.now() - start);
@@ -106,7 +112,10 @@ export class ShoppingAgent {
   private addToCart(request: ShopRequest): ShopResponse {
     const picked = this.pickShownOption(request);
     if ("text" in picked) return { request, text: picked.text };
-    return { request, text: this.putInCart(picked.item, request.quantity ?? 1) };
+    return {
+      request,
+      text: this.putInCart(picked.item, request.quantity ?? 1),
+    };
   }
 
   private removeFromCart(request: ShopRequest): ShopResponse {
@@ -130,7 +139,10 @@ export class ShoppingAgent {
     });
   }
 
-  private pickCartLine(request: ShopRequest, lines: CartLine[]): Picked<CartLine> {
+  private pickCartLine(
+    request: ShopRequest,
+    lines: CartLine[],
+  ): Picked<CartLine> {
     return pickItem(lines, request, {
       ambiguous: replies.ambiguousCartLine,
       notFound: replies.notInCart,

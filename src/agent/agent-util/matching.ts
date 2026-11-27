@@ -1,4 +1,4 @@
-/** Finds the shown option(no1,no2...) or cart line(item in shopping cart) the user means, 
+/** Finds the shown option(no1,no2...) or cart line(item in shopping cart) the user means,
  * by product name or by position number. */
 
 import type { Named } from "@/agent/types";
@@ -51,7 +51,9 @@ export function selectByProduct<T extends Named>(
   const words = significantWords(query);
   const best = breakTieByVariant(matchByName(items, query, words), words);
   const [only] = best;
-  if (best.length === 0) {return { kind: "none" }; }
+  if (best.length === 0) {
+    return { kind: "none" };
+  }
   if (best.length === 1 && only) return { kind: "found", item: only };
   const picked = pickByNumber(items, best, number);
   return picked

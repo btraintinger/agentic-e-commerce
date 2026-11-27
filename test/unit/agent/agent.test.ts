@@ -95,7 +95,8 @@ test("the reply schema has the required fields and rejects other intents", () =>
     expect.arrayContaining(["intent", "gender", "quantity", "maxPriceEur"]),
   );
   expect(
-    shopRequestSchema.safeParse({ ...request({}), intent: "write_poem" }).success,
+    shopRequestSchema.safeParse({ ...request({}), intent: "write_poem" })
+      .success,
   ).toBe(false);
 });
 

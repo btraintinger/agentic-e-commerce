@@ -20,4 +20,4 @@ export const shopRequestSchema = z.object({
   maxPriceEur: z.number().min(0).nullable(),
   minPriceEur: z.number().min(0).nullable(),
   number: z.int().min(1).nullable(),
-})
+});

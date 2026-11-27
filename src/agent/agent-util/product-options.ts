@@ -12,7 +12,7 @@ import type {
   CatalogProduct,
   CatalogVariant,
   ProductOption,
-  ShopRequest
+  ShopRequest,
 } from "@/agent/types";
 
 const maxOptions = 5;

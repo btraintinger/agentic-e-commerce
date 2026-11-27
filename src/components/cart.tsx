@@ -29,7 +29,11 @@ export function Cart() {
       ) : (
         <ol className="flex flex-col gap-2 text-sm">
           {items.map((item, index) => (
-            <li key={item.offerId} className="flex items-start gap-2">
+            <li
+              key={item.offerId}
+              data-testid="cart-line"
+              className="flex items-start gap-2"
+            >
               <span className="text-muted-foreground">{index + 1}.</span>
               <span className="flex-1">
                 {item.quantity} × {item.name}

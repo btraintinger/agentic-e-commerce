@@ -3,4 +3,4 @@
 | Person | Time |
 |---|---|
 | BernhardTraintinger | 54h 31m |
-| Sebastian Lamplmair | 12h 45m |
+| Sebastian Lamplmair | 14h 15m |
