@@ -11,7 +11,11 @@ export default defineConfig({
         extends: true,
         test: {
           name: "default",
-          exclude: [...configDefaults.exclude, routerIntegrationTests],
+          exclude: [
+            ...configDefaults.exclude,
+            routerIntegrationTests,
+            "test/e2e/**",
+          ],
         },
       },
       {

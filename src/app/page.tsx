@@ -1,19 +1,17 @@
-"use client";
-
-import { useQueryClient } from "@tanstack/react-query";
-import { createShoppingAgent } from "@/agent/agent";
-import { useTRPC } from "@/trpc/client";
+import { Cart } from "@/components/cart";
+import { CartProvider } from "@/components/cart-provider";
+import { Chat } from "@/components/chat";
 
 export default function HomePage() {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const model = undefined;
-  createShoppingAgent(model, trpc, queryClient);
-
   return (
-    <main>
-      <h1>JKU Webshop</h1>
-      <p>Catalog and cart validation are available through the tRPC API.</p>
+    <main className="mx-auto flex max-w-5xl flex-col gap-4 p-4">
+      <h1 className="text-xl font-semibold">JKU Webshop</h1>
+      <CartProvider>
+        <div className="grid gap-4 md:grid-cols-[1fr_320px]">
+          <Chat />
+          <Cart />
+        </div>
+      </CartProvider>
     </main>
   );
 }
