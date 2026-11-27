@@ -1,9 +1,11 @@
 import { expect, test, vi } from "vitest";
-import { toOptions, toProductFilters } from "@/agent/agent_util/catalog";
-import { failureReply, offTopicReply } from "@/agent/agent_util/replies";
+import { toOptions } from "@/agent/agent-util/product-options";
+import { ProductSearch } from "@/agent/agent-util/product-search";
+import { failureReply, offTopicReply } from "@/agent/agent-util/replies";
 import { ShoppingAgent } from "@/agent/shopping-agent";
-import { shopRequestSchema, type CartLine, type ShopRequest } from "@/agent/types";
-import type * as ParseMessageModule from "@/agent/parse-message";
+import { shopRequestSchema } from "@/agent/message-parser/shop-request-schema";
+import type { CartLine, ShopRequest } from "@/agent/types";
+import type * as ParseMessageModule from "@/agent/message-parser/parse-message";
 import { createTestTRPCOptions } from "../../support/trpc-client";
 
 vi.mock("server-only", () => ({}));
@@ -11,7 +13,7 @@ vi.mock("server-only", () => ({}));
 const { parseUserMessage } = vi.hoisted(() => ({
   parseUserMessage: vi.fn(),
 }));
-vi.mock("@/agent/parse-message", async (importOriginal) => ({
+vi.mock("@/agent/message-parser/parse-message", async (importOriginal) => ({
   ...(await importOriginal<typeof ParseMessageModule>()),
   parseUserMessage,
 }));
@@ -97,9 +99,19 @@ test("the reply schema has the required fields and rejects other intents", () =>
   ).toBe(false);
 });
 
-test("search filters use euro cents", () => {
+/** Runs ProductSearch.find and returns the input sent to `products.list`. */
+async function searchInput(product: string, shopRequest: ShopRequest) {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  const query = vi.spyOn(queryClient, "query").mockResolvedValue([]);
+  await new ProductSearch(trpc, queryClient).find(product, shopRequest);
+  const [options] = query.mock.calls[0]!;
+  return (options.queryKey[1] as { input: unknown }).input;
+}
+
+test("search filters use euro cents", async () => {
   expect(
-    toProductFilters(
+    await searchInput(
+      "rain jacket",
       request({ product: "rain jacket", minPriceEur: 10, maxPriceEur: 150 }),
     ),
   ).toEqual({ q: "rain jacket", minPrice: 1000, maxPrice: 15000 });
@@ -139,31 +151,18 @@ test("adding and removing by number changes the cart", async () => {
   expect(cart.lines()).toEqual([]);
 });
 
-test("search falls back to single words and deduplicates products", async () => {
+test("search sends one query with the full phrase and price filters", async () => {
   const { trpc, queryClient } = createTestTRPCOptions();
-  const boots = { ...jacket, id: "p2", name: "Rain Boots" };
-  const query = vi
-    .spyOn(queryClient, "query")
-    .mockResolvedValueOnce([])
-    .mockResolvedValueOnce([boots])
-    .mockResolvedValueOnce([jacket, boots]);
+  const query = vi.spyOn(queryClient, "query").mockResolvedValueOnce([]);
   const agent = createShoppingAgent(undefined, trpc, queryClient);
 
-  const reply = await agent.execute(
-    request({ product: "a rain jacket", maxPriceEur: 150 }),
-  );
+  await agent.execute(request({ product: "a rain jacket", maxPriceEur: 150 }));
 
   const queries = query.mock.calls.map(([options]) => options.queryKey);
-  expect(queries).toHaveLength(3);
-  expect(queries.map((key) => key[1])).toEqual([
+  expect(queries).toHaveLength(1);
+  expect(queries[0]?.[1]).toEqual(
     expect.objectContaining({ input: { q: "a rain jacket", maxPrice: 15000 } }),
-    expect.objectContaining({ input: { q: "rain", maxPrice: 15000 } }),
-    expect.objectContaining({ input: { q: "jacket", maxPrice: 15000 } }),
-  ]);
-  expect(reply.options?.map((option) => option.productId)).toEqual([
-    "p2",
-    "p1",
-  ]);
+  );
 });
 
 test("a failing search returns a generic error message", async () => {

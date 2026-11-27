@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { toOptions, toProductFilters } from "@/agent/agent_util/catalog";
-import { selectByProduct } from "@/agent/agent_util/matching";
-import { failureReply, offTopicReply } from "@/agent/agent_util/replies";
+import { toOptions } from "@/agent/agent-util/product-options";
+import { ProductSearch } from "@/agent/agent-util/product-search";
+import { selectByProduct } from "@/agent/agent-util/matching";
+import { failureReply, offTopicReply } from "@/agent/agent-util/replies";
 import { ShoppingAgent } from "@/agent/shopping-agent";
 import type { CartLine, ShopRequest } from "@/agent/types";
-import type * as ParseMessageModule from "@/agent/parse-message";
+import type * as ParseMessageModule from "@/agent/message-parser/parse-message";
 import { createTestTRPCOptions } from "../../support/trpc-client";
 
 vi.mock("server-only", () => ({}));
@@ -14,7 +15,7 @@ const createShoppingAgent = (
 ) => new ShoppingAgent(...args);
 
 const { parseUserMessage } = vi.hoisted(() => ({ parseUserMessage: vi.fn() }));
-vi.mock("@/agent/parse-message", async (importOriginal) => ({
+vi.mock("@/agent/message-parser/parse-message", async (importOriginal) => ({
   ...(await importOriginal<typeof ParseMessageModule>()),
   parseUserMessage,
 }));
@@ -164,14 +165,24 @@ describe("selectByProduct", () => {
   });
 });
 
-describe("toProductFilters", () => {
-  test("leaves out empty fields", () => {
-    expect(toProductFilters(request({}))).toEqual({});
+/** Runs ProductSearch.find and returns the input sent to `products.list`. */
+async function searchInput(product: string, shopRequest: ShopRequest) {
+  const { trpc, queryClient } = createTestTRPCOptions();
+  const query = vi.spyOn(queryClient, "query").mockResolvedValue([]);
+  await new ProductSearch(trpc, queryClient).find(product, shopRequest);
+  const [options] = query.mock.calls[0]!;
+  return (options.queryKey[1] as { input: unknown }).input;
+}
+
+describe("ProductSearch filters", () => {
+  test("leaves out empty price limits", async () => {
+    expect(await searchInput("hat", request({}))).toEqual({ q: "hat" });
   });
 
-  test("rounds euros to cents", () => {
+  test("rounds euros to cents", async () => {
     expect(
-      toProductFilters(
+      await searchInput(
+        "hat",
         request({ product: "hat", minPriceEur: 0, maxPriceEur: 19.995 }),
       ),
     ).toEqual({ q: "hat", minPrice: 0, maxPrice: 2000 });
@@ -268,7 +279,7 @@ describe("shopping agent", () => {
       request: request({ product: "rain hat" }),
       text: "Sorry, I found no “rain hat” that matches your request.",
     });
-    expect(query).toHaveBeenCalledTimes(3);
+    expect(query).toHaveBeenCalledTimes(1);
   });
 
   test("search without a product asks for one", async () => {
@@ -278,21 +289,13 @@ describe("shopping agent", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
-  test("search falls back to single words in order", async () => {
+  test("search without hits does not retry with single words", async () => {
     const { agent, query } = setup();
-    const boots = simple("p2", "Rain Boots");
-    const jacket = simple("p1", "Rain Jacket");
-    query
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([boots])
-      .mockResolvedValueOnce([jacket, boots]);
+    query.mockResolvedValue([]);
 
-    const reply = await agent.execute(request({ product: "rain jacket" }));
+    await agent.execute(request({ product: "rain jacket" }));
 
-    expect(reply.options?.map((o) => o.productId)).toEqual(["p2", "p1"]);
-    expect(reply.text).toBe(
-      "I found 2 options for “rain jacket”. Which one would you like?",
-    );
+    expect(query).toHaveBeenCalledTimes(1);
   });
 
   test("add_to_cart by number", async () => {

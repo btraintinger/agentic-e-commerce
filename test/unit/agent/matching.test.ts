@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { pickItem } from "@/agent/agent_util/matching";
+import { pickItem } from "@/agent/agent-util/matching";
 
 const items = [
   { name: "Casual Sneakers Court", variantName: "EU 41" },

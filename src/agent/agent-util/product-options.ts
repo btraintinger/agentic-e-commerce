@@ -1,5 +1,11 @@
-/** Converts between model replies and the catalog: price filters in cents, 
- * and products into up to 5 numbered, in-stock options. */
+/**
+ * Turns the products found by the search into what the user gets to choose from.
+ *
+ * For every product it picks the cheapest offer that is in stock, inside the
+ * requested price range and fits the requested gender. Products without such
+ * an offer are skipped. The first 5 hits are numbered 1..5, so the user can
+ * answer "I'll take number 2".
+ */
 
 import type {
   CatalogOffer,
@@ -11,25 +17,11 @@ import type {
 
 const maxOptions = 5;
 
-type Candidate = { variant: CatalogVariant; offer: CatalogOffer };
-
+/** Converts euros to cents; `null` (no limit given) stays undefined. */
 const toCents = (eur: number | null) =>
   eur === null ? undefined : Math.round(eur * 100);
 
-/** Translates the shop request into query filters for `products.list`. */
-export function toProductFilters(request: ShopRequest) {
-  return {
-    ...(request.product ? { q: request.product } : {}),
-    ...(request.minPriceEur === null
-      ? {}
-      : { minPrice: toCents(request.minPriceEur) }),
-    ...(request.maxPriceEur === null
-      ? {}
-      : { maxPrice: toCents(request.maxPriceEur) }),
-  };
-}
-
-export type ProductFilters = ReturnType<typeof toProductFilters>;
+type Candidate = { variant: CatalogVariant; offer: CatalogOffer };
 
 /** Turns the first products that have a fitting offer into numbered options. */
 export function toOptions(

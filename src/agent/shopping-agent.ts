@@ -1,11 +1,11 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { LanguageModel } from "ai";
-import { toOptions } from "@/agent/agent_util/catalog";
-import { parseUserMessage } from "@/agent/parse-message";
-import { pickItem, type Picked } from "@/agent/agent_util/matching";
-import { ProductSearch } from "@/agent/agent_util/product-search";
-import { replies } from "@/agent/agent_util/replies";
+import { toOptions } from "@/agent/agent-util/product-options";
+import { parseUserMessage } from "@/agent/message-parser/parse-message";
+import { pickItem, type Picked } from "@/agent/agent-util/matching";
+import { ProductSearch } from "@/agent/agent-util/product-search";
+import { replies } from "@/agent/agent-util/replies";
 import type {
   ShopResponse,
   CartControls,
@@ -16,6 +16,9 @@ import type {
 import type { AppRouter } from "@/server/api/root";
 
 /**
+ * 
+ * It acts on the JSON (ShopRequest) the parser (with help of the llm) is producing
+ * 
  * One chat message → one shop action:
  *   parseUserMessage → execute (search | addToCart | removeFromCart | offTopic) → reply
  *
