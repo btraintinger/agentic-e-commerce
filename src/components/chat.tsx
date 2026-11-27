@@ -10,11 +10,8 @@ import {
   useSyncExternalStore,
   type SubmitEvent,
 } from "react";
-import {
-  createShoppingAgent,
-  type AgentReply,
-  type ProductOption,
-} from "@/agent/agent";
+import { ShoppingAgent } from "@/agent/shopping-agent";
+import type { ProductOption, ShopResponse } from "@/agent/types";
 import { useCart } from "@/components/cart-provider";
 import { formatCents } from "@/components/format";
 import { useTRPC } from "@/trpc/client";
@@ -23,8 +20,10 @@ const noSubscription = () => () => {};
 
 export const modelId = "Qwen2.5-0.5B-Instruct-q4f16_1-MLC";
 
-type Message = { role: "user" } & Pick<AgentReply, "text">;
-type Entry = Message | ({ role: "assistant" } & AgentReply);
+//export const modelId = "Llama-3.2-1B-Instruct-q4f16_1-MLC"
+
+type Message = { role: "user" } & Pick<ShopResponse, "text">;
+type Entry = Message | ({ role: "assistant" } & ShopResponse);
 
 export function Chat() {
   const trpc = useTRPC();
@@ -46,7 +45,7 @@ export function Chat() {
   );
   // The cart controls read the latest state through a ref, so one agent keeps its shown options.
   const [agent] = useState(() =>
-    createShoppingAgent(model, trpc, queryClient, { lines, add, remove }),
+    new ShoppingAgent(model, trpc, queryClient, { lines, add, remove }),
   );
   const warmUp = useRef<Promise<void> | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -126,11 +125,11 @@ export function Chat() {
                 ))}
               </ol>
             )}
-            {entry.role === "assistant" && entry.intent && (
+            {entry.role === "assistant" && entry.request && (
               <details className="mt-1 text-xs text-muted-foreground">
-                <summary>Recognised intent</summary>
+                <summary>Recognised request</summary>
                 <pre className="whitespace-pre-wrap">
-                  {JSON.stringify(entry.intent, null, 2)}
+                  {JSON.stringify(entry.request, null, 2)}
                 </pre>
               </details>
             )}

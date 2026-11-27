@@ -1,32 +1,31 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  createShoppingAgent,
-  failureReply,
-  offTopicReply,
-  selectByProduct,
-  toOptions,
-  toProductFilters,
-  type CartLine,
-} from "@/agent/agent";
-import type { Intent } from "@/agent/intent";
-import type * as IntentModule from "@/agent/intent";
+import { toOptions, toProductFilters } from "@/agent/agent_util/catalog";
+import { selectByProduct } from "@/agent/agent_util/matching";
+import { failureReply, offTopicReply } from "@/agent/agent_util/replies";
+import { ShoppingAgent } from "@/agent/shopping-agent";
+import type { CartLine, ShopRequest } from "@/agent/types";
+import type * as ParseMessageModule from "@/agent/parse-message";
 import { createTestTRPCOptions } from "../../support/trpc-client";
 
 vi.mock("server-only", () => ({}));
 
-const { recognizeIntent } = vi.hoisted(() => ({ recognizeIntent: vi.fn() }));
-vi.mock("@/agent/intent", async (importOriginal) => ({
-  ...(await importOriginal<typeof IntentModule>()),
-  recognizeIntent,
+const createShoppingAgent = (
+  ...args: ConstructorParameters<typeof ShoppingAgent>
+) => new ShoppingAgent(...args);
+
+const { parseUserMessage } = vi.hoisted(() => ({ parseUserMessage: vi.fn() }));
+vi.mock("@/agent/parse-message", async (importOriginal) => ({
+  ...(await importOriginal<typeof ParseMessageModule>()),
+  parseUserMessage,
 }));
 
 beforeEach(() => {
   vi.restoreAllMocks();
-  recognizeIntent.mockReset();
+  parseUserMessage.mockReset();
   vi.spyOn(console, "debug").mockImplementation(() => undefined);
 });
 
-const intent = (fields: Partial<Intent>): Intent => ({
+const request = (fields: Partial<ShopRequest>): ShopRequest => ({
   intent: "search",
   product: null,
   gender: null,
@@ -167,13 +166,13 @@ describe("selectByProduct", () => {
 
 describe("toProductFilters", () => {
   test("leaves out empty fields", () => {
-    expect(toProductFilters(intent({}))).toEqual({});
+    expect(toProductFilters(request({}))).toEqual({});
   });
 
   test("rounds euros to cents", () => {
     expect(
       toProductFilters(
-        intent({ product: "hat", minPriceEur: 0, maxPriceEur: 19.995 }),
+        request({ product: "hat", minPriceEur: 0, maxPriceEur: 19.995 }),
       ),
     ).toEqual({ q: "hat", minPrice: 0, maxPrice: 2000 });
   });
@@ -190,25 +189,25 @@ describe("toOptions", () => {
   test("price bounds are inclusive and in cents", () => {
     const options = toOptions(
       [simple("a", "A", 999), simple("b", "B", 1000), simple("c", "C", 2001)],
-      intent({ minPriceEur: 10, maxPriceEur: 20.01 }),
+      request({ minPriceEur: 10, maxPriceEur: 20.01 }),
     );
     expect(options.map((o) => o.productId)).toEqual(["b", "c"]);
   });
 
   test("gender keeps unisex and variants without gender", () => {
-    const [option] = toOptions([gendered], intent({ gender: "female" }));
+    const [option] = toOptions([gendered], request({ gender: "female" }));
     expect(option?.offerId).toBe("o-f");
-    const [maleOption] = toOptions([gendered], intent({ gender: "male" }));
+    const [maleOption] = toOptions([gendered], request({ gender: "male" }));
     expect(maleOption?.offerId).toBe("o-m");
     const unisexOnly = toOptions(
       [gendered],
-      intent({ gender: "female", minPriceEur: 15 }),
+      request({ gender: "female", minPriceEur: 15 }),
     );
     expect(unisexOnly[0]?.offerId).toBe("o-n");
   });
 
   test("without gender the cheapest offer of any variant wins", () => {
-    const [option] = toOptions([gendered], intent({}));
+    const [option] = toOptions([gendered], request({}));
     expect(option).toEqual({
       number: 1,
       productId: "p",
@@ -226,7 +225,7 @@ describe("toOptions", () => {
     const empty = product("q", "Cap", [
       variant("v", "M", {}, [offer("o3", 100, "NO")]),
     ]);
-    const options = toOptions([soldOut, empty], intent({}));
+    const options = toOptions([soldOut, empty], request({}));
     expect(options.map((o) => o.offerId)).toEqual(["o2"]);
   });
 
@@ -234,7 +233,7 @@ describe("toOptions", () => {
     const products = Array.from({ length: 7 }, (_, i) =>
       simple(`p${i}`, `P${i}`),
     );
-    const options = toOptions(products, intent({}));
+    const options = toOptions(products, request({}));
     expect(options.map((o) => [o.number, o.productId])).toEqual([
       [1, "p0"],
       [2, "p1"],
@@ -250,7 +249,7 @@ describe("shopping agent", () => {
     const { agent, query } = setup();
     query.mockResolvedValue([simple("p1", "Rain Jacket")]);
 
-    const reply = await agent.execute(intent({ product: "jacket" }));
+    const reply = await agent.execute(request({ product: "jacket" }));
 
     expect(reply.text).toBe(
       "I found 1 option for “jacket”. Which one would you like?",
@@ -263,10 +262,10 @@ describe("shopping agent", () => {
     const { agent, query } = setup();
     query.mockResolvedValue([]);
 
-    const reply = await agent.execute(intent({ product: "rain hat" }));
+    const reply = await agent.execute(request({ product: "rain hat" }));
 
     expect(reply).toEqual({
-      intent: intent({ product: "rain hat" }),
+      request: request({ product: "rain hat" }),
       text: "Sorry, I found no “rain hat” that matches your request.",
     });
     expect(query).toHaveBeenCalledTimes(3);
@@ -274,7 +273,7 @@ describe("shopping agent", () => {
 
   test("search without a product asks for one", async () => {
     const { agent, query } = setup();
-    const reply = await agent.execute(intent({}));
+    const reply = await agent.execute(request({}));
     expect(reply.text).toBe("What kind of product are you looking for?");
     expect(query).not.toHaveBeenCalled();
   });
@@ -288,7 +287,7 @@ describe("shopping agent", () => {
       .mockResolvedValueOnce([boots])
       .mockResolvedValueOnce([jacket, boots]);
 
-    const reply = await agent.execute(intent({ product: "rain jacket" }));
+    const reply = await agent.execute(request({ product: "rain jacket" }));
 
     expect(reply.options?.map((o) => o.productId)).toEqual(["p2", "p1"]);
     expect(reply.text).toBe(
@@ -299,10 +298,10 @@ describe("shopping agent", () => {
   test("add_to_cart by number", async () => {
     const { agent, cart, query } = setup();
     query.mockResolvedValue([simple("p1", "Rain Jacket"), simple("p2", "Hat")]);
-    await agent.execute(intent({ product: "x" }));
+    await agent.execute(request({ product: "x" }));
 
     const reply = await agent.execute(
-      intent({ intent: "add_to_cart", number: 2, quantity: 3 }),
+      request({ intent: "add_to_cart", number: 2, quantity: 3 }),
     );
 
     expect(reply.text).toBe("Added 3 × Hat (M) to your cart.");
@@ -320,10 +319,10 @@ describe("shopping agent", () => {
   test("add_to_cart by name", async () => {
     const { agent, cart, query } = setup();
     query.mockResolvedValue([simple("p1", "Rain Jacket"), simple("p2", "Hat")]);
-    await agent.execute(intent({ product: "x" }));
+    await agent.execute(request({ product: "x" }));
 
     const reply = await agent.execute(
-      intent({ intent: "add_to_cart", product: "jacket" }),
+      request({ intent: "add_to_cart", product: "jacket" }),
     );
 
     expect(reply.text).toBe("Added 1 × Rain Jacket (M) to your cart.");
@@ -333,9 +332,9 @@ describe("shopping agent", () => {
   test("add_to_cart without a number among several options asks", async () => {
     const { agent, query } = setup();
     query.mockResolvedValue([simple("p1", "Rain Jacket"), simple("p2", "Hat")]);
-    await agent.execute(intent({ product: "x" }));
+    await agent.execute(request({ product: "x" }));
 
-    const reply = await agent.execute(intent({ intent: "add_to_cart" }));
+    const reply = await agent.execute(request({ intent: "add_to_cart" }));
 
     expect(reply.text).toBe(
       "Which option do you mean? Please name a number from 1 to 2.",
@@ -348,10 +347,10 @@ describe("shopping agent", () => {
       simple("p1", "Rain Jacket"),
       simple("p2", "Rain Boots"),
     ]);
-    await agent.execute(intent({ product: "x" }));
+    await agent.execute(request({ product: "x" }));
 
     const reply = await agent.execute(
-      intent({ intent: "add_to_cart", product: "rain" }),
+      request({ intent: "add_to_cart", product: "rain" }),
     );
 
     expect(reply.text).toBe(
@@ -364,7 +363,7 @@ describe("shopping agent", () => {
     async (fields) => {
       const { agent, cart } = setup();
       const reply = await agent.execute(
-        intent({ intent: "add_to_cart", ...fields }),
+        request({ intent: "add_to_cart", ...fields }),
       );
       expect(reply.text).toBe(
         "Please search for a product first, then pick an option.",
@@ -375,7 +374,7 @@ describe("shopping agent", () => {
 
   test("addOption adds one item", () => {
     const { agent, cart } = setup();
-    const [option] = toOptions([simple("p1", "Hat")], intent({}));
+    const [option] = toOptions([simple("p1", "Hat")], request({}));
     if (!option) throw new Error("expected an option");
     const { addOption } = agent;
 
@@ -386,7 +385,7 @@ describe("shopping agent", () => {
   test("remove_from_cart on an empty cart", async () => {
     const { agent } = setup();
     const reply = await agent.execute(
-      intent({ intent: "remove_from_cart", product: "hat" }),
+      request({ intent: "remove_from_cart", product: "hat" }),
     );
     expect(reply.text).toBe("Your cart is already empty.");
   });
@@ -396,7 +395,7 @@ describe("shopping agent", () => {
       memoryCart([line("o1", "Rain Jacket"), line("o2", "Wool Socks")]),
     );
     const reply = await agent.execute(
-      intent({ intent: "remove_from_cart", product: "sock" }),
+      request({ intent: "remove_from_cart", product: "sock" }),
     );
     expect(reply.text).toBe("Removed Wool Socks from your cart.");
     expect(cart.lines().map((l) => l.offerId)).toEqual(["o1"]);
@@ -407,7 +406,7 @@ describe("shopping agent", () => {
       memoryCart([line("o1", "Rain Jacket", "S"), line("o2", "Rain Boots")]),
     );
     const reply = await agent.execute(
-      intent({ intent: "remove_from_cart", product: "rain" }),
+      request({ intent: "remove_from_cart", product: "rain" }),
     );
     expect(reply.text).toBe(
       "Which one should I remove: Rain Jacket (S), Rain Boots (M)?",
@@ -419,7 +418,7 @@ describe("shopping agent", () => {
     const { agent } = setup(
       memoryCart([line("o1", "Rain Jacket"), line("o2", "Hat")]),
     );
-    const reply = await agent.execute(intent({ intent: "remove_from_cart" }));
+    const reply = await agent.execute(request({ intent: "remove_from_cart" }));
     expect(reply.text).toBe(
       "Which item should I remove? Please name it or its position in the cart.",
     );
@@ -427,9 +426,9 @@ describe("shopping agent", () => {
 
   test("off_topic", async () => {
     const { agent, query } = setup();
-    const offTopic = intent({ intent: "off_topic" });
+    const offTopic = request({ intent: "off_topic" });
     expect(await agent.execute(offTopic)).toEqual({
-      intent: offTopic,
+      request: offTopic,
       text: offTopicReply,
     });
     expect(query).not.toHaveBeenCalled();
@@ -439,18 +438,18 @@ describe("shopping agent", () => {
     const { agent, query } = setup(memoryCart(), {});
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     query.mockRejectedValue(new Error("down"));
-    const search = intent({ product: "hat" });
-    recognizeIntent.mockResolvedValue(search);
+    const search = request({ product: "hat" });
+    parseUserMessage.mockResolvedValue(search);
 
     expect(await agent.handleMessage("a hat")).toEqual({
-      intent: search,
+      request: search,
       text: failureReply,
     });
   });
 
   test("handleMessage runs the recognized intent", async () => {
     const { agent } = setup(memoryCart(), {});
-    recognizeIntent.mockResolvedValue(intent({ intent: "off_topic" }));
+    parseUserMessage.mockResolvedValue(request({ intent: "off_topic" }));
     const { handleMessage } = agent;
 
     expect((await handleMessage("poem")).text).toBe(offTopicReply);
@@ -461,12 +460,12 @@ describe("shopping agent", () => {
     expect(await agent.handleMessage("hi")).toEqual({
       text: "The language model is not loaded yet.",
     });
-    expect(recognizeIntent).not.toHaveBeenCalled();
+    expect(parseUserMessage).not.toHaveBeenCalled();
   });
 
   test("an unrecognized intent asks to rephrase", async () => {
     const { agent } = setup(memoryCart(), {});
-    recognizeIntent.mockResolvedValue(null);
+    parseUserMessage.mockResolvedValue(null);
     expect(await agent.handleMessage("???")).toEqual({
       text: "Sorry, I did not get that. Could you please ask again?",
     });

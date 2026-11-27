@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { CartControls, CartLine } from "@/agent/agent";
+import type { CartControls, CartLine } from "@/agent/types";
 
 interface CartContextValue extends CartControls {
   items: CartLine[];
