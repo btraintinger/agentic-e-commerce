@@ -170,7 +170,7 @@ async function searchInput(product: string, shopRequest: ShopRequest) {
   const { trpc, queryClient } = createTestTRPCOptions();
   const query = vi.spyOn(queryClient, "query").mockResolvedValue([]);
   await new ProductSearch(trpc, queryClient).find(product, shopRequest);
-  const [options] = query.mock.calls[0]!;
+  const [options] = query.mock.calls[0];
   return (options.queryKey[1] as { input: unknown }).input;
 }
 

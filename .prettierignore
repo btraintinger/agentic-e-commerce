@@ -1,5 +1,8 @@
 # Generated files and package manager metadata
 /coverage/
+/playwright-report/
+/test-results/
+/test/e2e/.chrome-profile/
 /drizzle/
 /next-env.d.ts
 /pnpm-lock.yaml

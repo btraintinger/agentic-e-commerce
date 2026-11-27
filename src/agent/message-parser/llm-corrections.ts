@@ -27,13 +27,13 @@ export function extractPriceRange(message: string): {
 } {
   const range = BETWEEN.exec(message) ?? RANGE.exec(message);
   if (range) {
-    const [a, b] = [toNumber(range[1]!), toNumber(range[2]!)];
+    const [a, b] = [toNumber(range[1]), toNumber(range[2])];
     return { minPriceEur: Math.min(a, b), maxPriceEur: Math.max(a, b) };
   }
   const max = MAX.exec(message);
   const min = MIN.exec(message);
-  let minPriceEur = min ? toNumber(min[1]!) : null;
-  let maxPriceEur = max ? toNumber(max[1]!) : null;
+  let minPriceEur = min ? toNumber(min[1]) : null;
+  let maxPriceEur = max ? toNumber(max[1]) : null;
   if (
     minPriceEur !== null &&
     maxPriceEur !== null &&
@@ -122,7 +122,7 @@ export function extractQuantity(message: string): number | null {
       cleaned,
     );
   if (!match) return null;
-  const raw = match[1]!.toLowerCase();
+  const raw = match[1].toLowerCase();
   // "one" is mostly an article ("the second one", "one shirt") -> not a quantity.
   if (raw === "one") return null;
   const value = WORD_NUMBERS[raw] ?? Number(raw);

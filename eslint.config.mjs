@@ -1,4 +1,4 @@
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTypeScript from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
@@ -8,6 +8,11 @@ import tseslint from "typescript-eslint";
 const drizzleObjectName = ["db", "getDb", "transaction"];
 
 const config = defineConfig([
+  globalIgnores([
+    "playwright-report/",
+    "test-results/",
+    "test/e2e/.chrome-profile/",
+  ]),
   ...nextVitals,
   {
     files: ["{src,scripts,test}/**/*.{ts,tsx}", "*.ts"],
